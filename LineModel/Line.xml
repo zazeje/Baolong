@@ -1,0 +1,81 @@
+<Line name="二代雨量线" charcode="L7" enable="1" lineNo="7">
+  <station name="唤醒测试" charcode="WUS" enable="1" stationNo = "1">
+
+<!--
+   <device name="Tpms手柄" charcode="PH" deviceId="8" enable="1" ip="" port="com1" baudRate="9600" dataBits="8" stopBits="1" parity="0">
+      <Unit name="手柄" desc="" enable="1" startAddr="" length="">
+        <tag name="唤醒" desc="开始唤醒"  address="" mtagname="SW" logicalMode = "" ctagcount="" ctagname1="" ctagname2="" ctagname3=""/>
+        <tag name="判定结果" desc="判定结果"  address="" mtagname="JR" logicalMode = "" ctagcount="" ctagname1="" ctagname2="" ctagname3=""/>
+        <tag name="通信状态" desc="通信状态"  address="" mtagname="CS" logicalMode = "" ctagcount="" ctagname1="" ctagname2="" ctagname3=""/>
+      </Unit>
+    </device>
+
+    <device name="三菱FxPLC" charcode="PLC" deviceId="1" enable="1" ip="" port="com1" baudRate="9600" dataBits="8" stopBits="1" parity="0">
+      <Unit name="U1" desc="" enable="1" startAddr="111" length="10">
+        <tag name="待机状态" desc="待机状态信号"  address="111" mtagname="SS" logicalMode = "None" ctagcount="" ctagname1="" ctagname2="" ctagname3=""/>
+        <tag name="唤醒" desc="唤醒信号"  address="112" mtagname="SC" logicalMode = "DCM" ctagcount="1" ctagname1="WUS$PH$SW" ctagname2="" ctagname3=""/>
+        <tag name="报警" desc="报警信号"  address="115" mtagname="SA" logicalMode = "None" ctagcount="" ctagname1="" ctagname2="" ctagname3=""/>
+        <tag name="判定结果" desc="判定结果"  address="117" mtagname="JR" logicalMode = "MCD" ctagcount="" ctagname1="" ctagname2="" ctagname3=""/>
+        <tag name="启动皮带" desc="启动皮带转动信号"  address="120" mtagname="SB" logicalMode = "MCD" ctagcount="1" ctagname1="WUS.PH.SB" ctagname2="" ctagname3=""/>
+        <tag name="通信状态" desc="通信状态"  address="119" mtagname="CS" logicalMode = "None" ctagcount="" ctagname1="" ctagname2="" ctagname3=""/>
+      </Unit>
+    </device>
+
+       <device name="烧程器" charcode="AP" deviceId="3" enable="1" ip="192.168.20.201" port="8738" baudRate="9600" dataBits="8" stopBits="1" parity="0">
+          <Unit name="烧程" desc="" enable="1" startAddr="" length="">
+            <tag name="烧程" desc="启动烧程"  address="" mtagname="SP" logicalMode = "" ctagcount="" ctagname1="" ctagname2="" ctagname3=""/>
+            <tag name="判定结果" desc="判定结果"  address="" mtagname="JR" logicalMode = "" ctagcount="" ctagname1="" ctagname2="" ctagname3=""/>
+            <tag name="通信状态" desc="通信状态"  address="" mtagname="CS" logicalMode = "" ctagcount="" ctagname1="" ctagname2="" ctagname3=""/>
+          </Unit>
+        </device>
+        <device name="打标机" charcode="LM" deviceId="7" enable="1"  ip="192.168.20.134" port="5040" baudRate="9600" dataBits="8" stopBits="1" parity="0">
+        <Unit name="打标" desc="" enable="1" startAddr="" length="">
+          <tag name="打标" desc="开始打标"  address="" mtagname="SM" logicalMode = "" ctagcount="" ctagname1="" ctagname2="" ctagname3=""/>
+          <tag name="判定结果" desc="判定结果"  address="" mtagname="JR" logicalMode = "" ctagcount="" ctagname1="" ctagname2="" ctagname3=""/>
+          <tag name="通信状态" desc="通信状态"  address="" mtagname="CS" logicalMode = "" ctagcount="" ctagname1="" ctagname2="" ctagname3=""/>
+        </Unit>
+        </device>
+
+        -->
+
+
+
+        <device name="发射电压表" charcode="TVM" deviceId="8" enable="1" ip="192.168.20.130" port="5030" baudRate="9600" dataBits="8" stopBits="1" parity="0">
+          <Unit name="发射电压" desc="" enable="1" startAddr="" length="">
+            <tag name="开始采集" desc="开始采集"  address="" mtagname="SC" logicalMode = "" ctagcount="" ctagname1="" ctagname2="" ctagname3=""/>
+            <tag name="停止采集" desc="停止采集"  address="" mtagname="EC" logicalMode = "" ctagcount="" ctagname1="" ctagname2="" ctagname3=""/>
+            <tag name="瞬时值" desc="瞬时值"  address="" mtagname="IV" logicalMode = "" ctagcount="" ctagname1="" ctagname2="" ctagname3=""/>
+            <tag name="累积值" desc="累积值"  address="" mtagname="CV" logicalMode = "" ctagcount="" ctagname1="" ctagname2="" ctagname3=""/>
+            <tag name="判定结果" desc="判定结果"  address="" mtagname="JR" logicalMode = "" ctagcount="" ctagname1="" ctagname2="" ctagname3=""/>
+            <tag name="通信状态" desc="通信状态"  address="" mtagname="CS" logicalMode = "" ctagcount="" ctagname1="" ctagname2="" ctagname3=""/>
+          </Unit>
+        </device>
+
+
+        <device name="发射电流表" charcode="TCM" deviceId="10" enable="1" ip="192.168.20.130" port="5031" baudRate="9600" dataBits="8" stopBits="1" parity="0">
+          <Unit name="发射电流" desc="" enable="1" startAddr="" length="">
+            <tag name="开始采集" desc="开始采集"  address="" mtagname="SC" logicalMode = "" ctagcount="" ctagname1="" ctagname2="" ctagname3=""/>
+            <tag name="停止采集" desc="停止采集"  address="" mtagname="EC" logicalMode = "" ctagcount="" ctagname1="" ctagname2="" ctagname3=""/>
+            <tag name="瞬时值" desc="瞬时值"  address="" mtagname="IV" logicalMode = "" ctagcount="" ctagname1="" ctagname2="" ctagname3=""/>
+            <tag name="累积值" desc="累积值"  address="" mtagname="CV" logicalMode = "" ctagcount="" ctagname1="" ctagname2="" ctagname3=""/>
+            <tag name="判定结果" desc="判定结果"  address="" mtagname="JR" logicalMode = "" ctagcount="" ctagname1="" ctagname2="" ctagname3=""/>
+            <tag name="通信状态" desc="通信状态"  address="" mtagname="CS" logicalMode = "" ctagcount="" ctagname1="" ctagname2="" ctagname3=""/>
+          </Unit>
+        </device>
+
+
+        <device name="烧程PLC" charcode="PLC" deviceId="6" enable="1" ip="192.168.20.130" port="502" baudRate="9600" dataBits="8" stopBits="1" parity="0">
+          <Unit name="M1" desc="" enable="1" startAddr="19171" length="10">
+            <tag name="1xx" desc="待机状态信号"  address="19171" mtagname="SS" logicalMode = "None" ctagcount="1" ctagname1="WUS$SS" ctagname2="" ctagname3=""/>
+            <tag name="打标机" desc="开始采集信号"  address="19178" mtagname="SM" logicalMode = "DCM" ctagcount="1" ctagname1="WUS$LM$SM" ctagname2="" ctagname3=""/>
+            <tag name="烧成器" desc="停止采集信号"  address="19173" mtagname="SP" logicalMode = "DCM" ctagcount="1" ctagname1="WUS$AP$SP" ctagname2="" ctagname3=""/>
+            <tag name="电流表" desc="报警信号"  address="19174" mtagname="CSC" logicalMode = "DCM" ctagcount="1" ctagname1="WUS$TCM$SC" ctagname2="" ctagname3=""/>
+            <tag name="电流表" desc="判定结果"  address="19175" mtagname="CEC" logicalMode = "DCM" ctagcount="1" ctagname1="WUS$TCM$EC" ctagname2="" ctagname3=""/>
+            <tag name="电压" desc="启动皮带转动信号"  address="19176" mtagname="VSC" logicalMode = "DCM" ctagcount="1" ctagname1="WUS$TVM$SC" ctagname2="" ctagname3=""/>
+            <tag name="电压" desc="通信状态"  address="19177" mtagname="VEC" logicalMode = "DCM" ctagcount="1" ctagname1="WUS$TVM$EC" ctagname2="" ctagname3=""/>
+          </Unit>
+        </device>
+
+
+</station>
+</Line>
