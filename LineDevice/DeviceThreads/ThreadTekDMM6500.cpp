@@ -171,6 +171,7 @@ string ThreadTekDMM6500::getParameterNoInfo()
                 data = _di.parameter.at(i);
             else
                 _log.LOG_ERROR("ThreadTektronix 【%s】 获取加工参数失败",_di.Name.data());
+            break;
         }
     }
     if(data.empty())
@@ -246,7 +247,7 @@ void ThreadTekDMM6500::threadprocess()
                                 string partNoId = m_db.Read_TagMValue(_di.IdFlag);
                                 string partSeqNo = m_db.Read_TagMValue(_di.SnFlag);
                                 _log.LOG_DEBUG("ThreadTektronix 【%s】设备 序列号为【%s】 产品ID为【%s】",_di.Name.data(),partSeqNo.data(),partNoId.data());
-                                int index = processD3Line(partNoId, partSeqNo);
+                                int index = processTruckLine(partNoId, partSeqNo);
                                 _log.LOG_DEBUG("ThreadTektronix 【%s】特征值为【%s】",_di.Name.data(),pi.testItemEigenValue.data());
                                 saveToSql(partNoId, partSeqNo,index);
                                 sendValueToTcpServer(pi.testItemEigenValue);
