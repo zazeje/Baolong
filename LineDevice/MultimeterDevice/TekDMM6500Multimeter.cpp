@@ -26,7 +26,7 @@ TekDMM6500MultimeterTcp::TekDMM6500MultimeterTcp(int port ,string ip) : TcpDevic
     ClearBuf100 = "TRACe:CLEar \"buf100\"";
 }
 
-TekDMM6500MultimeterTcp::TekDMM6500MultimeterTcp(int port,string ip,string name) : TcpDevice(port,ip,name)
+TekDMM6500MultimeterTcp::TekDMM6500MultimeterTcp(int port,string ip,string name) : TcpDevice(port,ip,4001,name)
 {
     SysiBeep = ":SYSTem:BEEPer 500, 1";
     FuncVoltDc = ":SENS:FUNC \"VOLT:DC\"";

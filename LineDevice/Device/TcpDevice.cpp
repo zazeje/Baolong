@@ -50,6 +50,56 @@ TcpDevice::TcpDevice(int port ,string ip ,string name)
     m_communicateStatus = true;
 }
 
+TcpDevice::TcpDevice(int port ,string ip ,int clientPort,string name)
+{
+    isReConnect = false;
+    stopRecon = false;
+    Port = port;
+    IPaddr = ip;
+    Name = name;
+
+    //创建一个 TCP socket
+    if((Socket_fd = socket(AF_INET,SOCK_STREAM,IPPROTO_TCP)) < 0)  //IPV4  SOCK_STREAM 数据报套接字（TCP协议）
+    {
+        printf("Creat Socket Error \n");
+    }
+
+    bzero(&address,sizeof(address));
+    address.sin_family = AF_INET;
+    address.sin_addr.s_addr = inet_addr(ip.data());
+    address.sin_port = htons(port);
+
+    sockaddr_in client;
+    client.sin_family = AF_INET;
+    client.sin_addr.s_addr = htonl(INADDR_ANY);
+    client.sin_port = htons(clientPort);
+    if (bind( Socket_fd, (const sockaddr*) &client, sizeof(client)) == -1) {
+      printf("bind() failed.\n");
+//      closesocket(ConnectSocket);
+    }
+
+
+    struct timeval timeout;
+    timeout.tv_sec = 2;//2s
+    timeout.tv_usec = 0;
+    setsockopt(Socket_fd,SOL_SOCKET,SO_SNDTIMEO,(const char*)&timeout,sizeof(timeout));
+    setsockopt(Socket_fd,SOL_SOCKET,SO_RCVTIMEO,(const char*)&timeout,sizeof(timeout));
+
+    if ( connect( Socket_fd, (const sockaddr*) &address, sizeof(address) )) {
+       printf( "Failed to connect.\n" );
+//       WSACleanup();
+     }
+
+    struct sigaction sa;
+    sa.sa_handler = SIG_IGN;
+    sa.sa_flags = 0;
+    sigemptyset(&sa.sa_mask);
+    sigaction(SIGPIPE, &sa, 0);
+    isStopflag = false;
+    endStr = "\r\n";
+    m_communicateStatus = true;
+}
+
 TcpDevice::~TcpDevice()
 {
     close(Socket_fd);

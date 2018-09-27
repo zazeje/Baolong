@@ -25,6 +25,7 @@ class TcpDevice
 public:
 
     TcpDevice(int port ,string ip );
+    TcpDevice(int port ,string ip ,int clientPort,string name);
     TcpDevice(int port ,string ip , string name);
     virtual ~TcpDevice();
 
