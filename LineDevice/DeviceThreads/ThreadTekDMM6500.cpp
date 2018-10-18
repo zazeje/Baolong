@@ -517,8 +517,13 @@ void ThreadTekDMM6500::CommunicateTest()
 
 void ThreadTekDMM6500::CollectCurrent(int workTimes)
 {
+    //设置测试、判定参数
+    setTestPara(workTimes);
+    //获取采集参数
+    string para = getParameterNoInfo();
     if(_di.type == "1")
     {
+        myTcpDevice->SendCommand(para+"\n");
         _cValue = myTcpDevice->GetValueByBatch(_coefficient);
     }
 }
