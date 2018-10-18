@@ -110,6 +110,7 @@ private:
     void initDevice();
     void checkTestPara(int index);
     bool m_simulationDataFlag;
+    string m_frameCheckID;
 };
 
 #endif //THREADTPMSHANDLE_H

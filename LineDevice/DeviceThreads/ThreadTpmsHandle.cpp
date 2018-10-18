@@ -41,6 +41,7 @@ ThreadTpmsHandle::ThreadTpmsHandle(DeviceInfo di) : DeviceThread(di),_tpmsDataLe
         myComDevice = new TpmsHandle(SerialPortParameters::GetSpp(_di),di.Name);
     }
     m_simulationDataFlag = false;
+    m_frameCheckID = "";
 }
 
 /**
@@ -135,6 +136,7 @@ void ThreadTpmsHandle::clearData(string tagName)
     m_db.Write_TagMValue(_di.EigenValue , "");
     m_db.Write_TagMValue(_di.JudgeResult , "");
     _log.LOG_DEBUG("ThreadTpmsHandle 【%s】 检测到开始采集信号!",_di.Name.data());
+    m_frameCheckID = "";
 }
 
 string ThreadTpmsHandle::sendID(string id)
@@ -277,6 +279,7 @@ void ThreadTpmsHandle::processStart()
                     _log.LOG_DEBUG("ThreadTpmsHandle 【%s】 检测到气压测试唤醒信号! ID = 【%s】",_di.Name.data(),id.data());
                     string backID;
                     backID = sendID(id);
+                    m_frameCheckID = id;
                     _log.LOG_DEBUG("ThreadTpmsHandle 【%s】 手柄回读ID为【%s】",_di.Name.data(),backID.data());
                     m_mode = Press;
                     m_simulationDataFlag = false;
@@ -354,6 +357,7 @@ void ThreadTpmsHandle::processStart()
                     _log.LOG_DEBUG("ThreadTpmsHandle 【%s】设备 产品ID为【%s】 序列号为【%s】",_di.Name.data(),partNoId.data(),partSeqNo.data());
 
                     processTpmsCheck(partSeqNo, partNoId);
+                    m_frameCheckID = "";
 
                 }
                //处理通信状态
@@ -475,63 +479,67 @@ void ThreadTpmsHandle::CheckDataAndCalcuatePress()
     if(_tpmsDatas.length() >= _tpmsDataLength)
     {
         string HexValue = extractTpmsData();
-        string simulation = HexValue.substr(36,4);
-        if(!simulation.compare("AB56"))
+        string framePartNoID = HexValue.substr(2,8);
+        if(framePartNoID.compare(m_frameCheckID) == 0)
         {
-            m_simulationDataFlag = true;
-//            _log.LOG_DEBUG("ThreadTpmsHandle HexValue 【%s】",simulation.data());
-        }
-//        _log.LOG_DEBUG("ThreadTpmsHandle HexValue 【%s】simulation 【%s】",HexValue.data(),simulation.data());
-        string collectvalue;
-        if(m_nPressTestItemIndex != TestItemNoExist)
-        {
-            double press = hextodec(HexValue.substr(10,2));
-            _log.LOG_DEBUG("ThreadTpmsHandle CheckDataAndCalcuatePress 【%s】设备 气压进制转换结果值为【%f】",_di.Name.data(),press);
-            if (press > 4)
+            string simulation = HexValue.substr(36,4);
+            if(!simulation.compare("AB56"))
             {
-                double presstmp = CalcuateData(press,_posfixpressFormula);
-                _log.LOG_DEBUG("ThreadTpmsHandle CheckDataAndCalcuatePress 【%s】设备 计算气压值结果为【%f】",_di.Name.data(),presstmp);
-                if(presstmp > 0)
+                m_simulationDataFlag = true;
+    //            _log.LOG_DEBUG("ThreadTpmsHandle HexValue 【%s】",simulation.data());
+            }
+    //        _log.LOG_DEBUG("ThreadTpmsHandle HexValue 【%s】simulation 【%s】",HexValue.data(),simulation.data());
+            string collectvalue;
+            if(m_nPressTestItemIndex != TestItemNoExist)
+            {
+                double press = hextodec(HexValue.substr(10,2));
+                _log.LOG_DEBUG("ThreadTpmsHandle CheckDataAndCalcuatePress 【%s】设备 气压进制转换结果值为【%f】",_di.Name.data(),press);
+                if (press > 4)
                 {
-                    _iValuePress = DoubleToString(presstmp,"%.2f");
-                    _iCollectPress.append(_iValuePress + "/");
-                    m_nCurrTestItemIndex = m_nPressTestItemIndex;
-                    sendValueToTcpServer(_iValuePress);
-                    collectvalue = _iValuePress;
+                    double presstmp = CalcuateData(press,_posfixpressFormula);
+                    _log.LOG_DEBUG("ThreadTpmsHandle CheckDataAndCalcuatePress 【%s】设备 计算气压值结果为【%f】",_di.Name.data(),presstmp);
+                    if(presstmp > 0)
+                    {
+                        _iValuePress = DoubleToString(presstmp,"%.2f");
+                        _iCollectPress.append(_iValuePress + "/");
+                        m_nCurrTestItemIndex = m_nPressTestItemIndex;
+                        sendValueToTcpServer(_iValuePress);
+                        collectvalue = _iValuePress;
+                    }
                 }
             }
-        }
-        if(m_nVoltageTestItemIndex != TestItemNoExist)
-        {
-            double voltagetmp = 0.0;
-            if((!m_CurrPartNo.compare("96216708")) || (!m_CurrPartNo.compare("96216721"))
-            || (!m_CurrPartNo.compare("96217012")) || (!m_CurrPartNo.compare("96217006")))
-            {//QY1104A1、QY1104、QY2001A5、QY2001A8件号特例化
-                srand(time(0));       //seed
-                voltagetmp = m_VoltageMinValue + 0.00001 + ((double)(rand() % (int)((m_VoltageMaxValue - m_VoltageMinValue) * 100 -1)) / 100);
+            if(m_nVoltageTestItemIndex != TestItemNoExist)
+            {
+                double voltagetmp = 0.0;
+                if((!m_CurrPartNo.compare("96216708")) || (!m_CurrPartNo.compare("96216721"))
+                || (!m_CurrPartNo.compare("96217012")) || (!m_CurrPartNo.compare("96217006")))
+                {//QY1104A1、QY1104、QY2001A5、QY2001A8件号特例化
+                    srand(time(0));       //seed
+                    voltagetmp = m_VoltageMinValue + 0.00001 + ((double)(rand() % (int)((m_VoltageMaxValue - m_VoltageMinValue) * 100 -1)) / 100);
 
+                }
+                else
+                {
+                    double voltage = hextodec(HexValue.substr(14,2));
+                    _log.LOG_DEBUG("ThreadTpmsHandle CheckDataAndCalcuatePress 【%s】设备 电压进制转换结果值为【%f】",_di.Name.data(),voltage);
+                    voltagetmp = CalcuateData(voltage,_posfixvoltageFormula);
+                }
+                _log.LOG_DEBUG("ThreadTpmsHandle CheckDataAndCalcuatePress 【%s】设备 计算电压值结果为【%f】",_di.Name.data(),voltagetmp);
+                if(voltagetmp > 0)
+                {
+                    _iValueVoltage = DoubleToString(voltagetmp,"%.2f");
+                    _iCollectVoltage.append(_iValueVoltage + "/");
+                    m_nCurrTestItemIndex = m_nVoltageTestItemIndex;
+                    sendValueToTcpServer(_iValueVoltage);
+                    collectvalue = _iValueVoltage;
+                }
             }
-            else
+            if((m_nPressTestItemIndex != TestItemNoExist) && (m_nVoltageTestItemIndex != TestItemNoExist))
             {
-                double voltage = hextodec(HexValue.substr(14,2));
-                _log.LOG_DEBUG("ThreadTpmsHandle CheckDataAndCalcuatePress 【%s】设备 电压进制转换结果值为【%f】",_di.Name.data(),voltage);
-                voltagetmp = CalcuateData(voltage,_posfixvoltageFormula);
+                collectvalue = _iValuePress + "/" +_iValueVoltage;
             }
-            _log.LOG_DEBUG("ThreadTpmsHandle CheckDataAndCalcuatePress 【%s】设备 计算电压值结果为【%f】",_di.Name.data(),voltagetmp);
-            if(voltagetmp > 0)
-            {
-                _iValueVoltage = DoubleToString(voltagetmp,"%.2f");
-                _iCollectVoltage.append(_iValueVoltage + "/");
-                m_nCurrTestItemIndex = m_nVoltageTestItemIndex;
-                sendValueToTcpServer(_iValueVoltage);
-                collectvalue = _iValueVoltage;
-            }
+            m_db.Write_TagMValue(_di.iValue, "手柄采集值为：【" + collectvalue + "】");//在显示界面上实时更新瞬时值
         }
-        if((m_nPressTestItemIndex != TestItemNoExist) && (m_nVoltageTestItemIndex != TestItemNoExist))
-        {
-            collectvalue = _iValuePress + "/" +_iValueVoltage;
-        }
-        m_db.Write_TagMValue(_di.iValue, "手柄采集值为：【" + collectvalue + "】");//在显示界面上实时更新瞬时值
         CheckDataAndCalcuatePress();
     }
 }

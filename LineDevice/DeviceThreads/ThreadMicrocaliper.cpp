@@ -394,7 +394,7 @@ void ThreadMicrocaliper::getResult()
     _log.LOG_DEBUG("ThreadMicrocaliper 【%s】 result2 = 【%.3f】",_di.Name.data(),m_result2);
     m_db.Write_TagMValue(_di.iValue, "高度检测结果 result2 = 【" + DoubleToString(m_result2,"%.3f") + "】");
 
-    sleep(80);
+    sleep(78);
 
     m_result3 = getLeakageResult();
     _log.LOG_DEBUG("ThreadMicrocaliper 【%s】 result3 = 【%.3f】",_di.Name.data(),m_result3);

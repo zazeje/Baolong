@@ -1,7 +1,7 @@
 #include "main.h"
 #include "DataHelper/LocalLineInfo.h"
 
-string mainVersion = "V1.0.53";
+string mainVersion = "V1.0.56";
 string subVersion = ".20180912";
 LineInfo gLine;
 string dispatchNo;                          //派工单号
