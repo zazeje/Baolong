@@ -35,6 +35,7 @@ public:
 
     static QString m_productModel;
     static QString m_craftName;
+    static int m_setWorkMode;
 
     void SetEth0IP(string);
     string GetEth0IP();
@@ -58,6 +59,7 @@ public:
 
 private:
 
+    QTimer *checkSetWorkMode;
     QHBoxLayout* m_ipLayout1;
     mainWidget* m_parent;
     QLabel* m_tileLabel;
@@ -112,7 +114,7 @@ signals:
     void UpdateOrExprotOkSignal(int);
 
 private slots:
-
+    void SetWorkMode();
     void ExportLog();
     void UpdateSource();
     void ConfirmPress();

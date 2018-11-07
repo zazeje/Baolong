@@ -6,6 +6,7 @@ QString PBoxConfig::m_productModel = "";
 QString PBoxConfig::m_craftName = "";
 string PBoxConfig::m_IPaddr = "";
 bool PBoxConfig::m_checkJRFlag = true;
+int PBoxConfig::m_setWorkMode = -1;
 
 QPushButton* PBoxConfig::m_exportLogBtn;
 QPushButton* PBoxConfig::m_updateSourceBtn;
@@ -232,6 +233,10 @@ PBoxConfig::PBoxConfig(mainWidget *parent): m_parent(parent),m_checkJRFlagShadow
     this->setFixedSize(width,height); //设置窗体大小为屏幕大小
     setAutoFillBackground(true);
     this->setLayout(m_wholeLayout);
+
+    checkSetWorkMode = new QTimer(this);
+    checkSetWorkMode->start(1000);
+    connect(checkSetWorkMode,SIGNAL(timeout()),this,SLOT(SetWorkMode()));
 }
 
 /**
@@ -1410,4 +1415,113 @@ void PBoxConfig::TopKeyboard()
 void PBoxConfig::BottomKeyboard()
 {
     frmInput::Instance()->Init("bottom", "silvery", 15, 10);
+}
+
+void PBoxConfig::SetWorkMode()
+{
+    if(PBoxConfig::m_setWorkMode != -1){
+        this->m_workmodecomBox->setCurrentIndex(PBoxConfig::m_setWorkMode);
+        if(PBoxConfig::m_setWorkMode == 0)
+        {
+            m_workmode = 0;
+            m_enableSampleMode = 0;
+        }
+        else
+        {
+            if(PBoxConfig::m_setWorkMode == 2)
+            {
+                m_enableSampleMode = 1;
+            }
+            else
+            {
+                m_enableSampleMode = 0;
+            }
+            m_workmode = 1;
+        }
+
+        if(m_workmode != m_workmodeshadow)
+        {
+            m_workmodeshadow = m_workmode;
+            if(m_workmodeshadow == 1)
+            {
+                currEditPartNo = "";
+                pthread_mutex_lock(&mutexDeviceDriverCond);
+                WorkModeNotify = m_workmodeshadow;
+                pthread_mutex_unlock(&mutexDeviceDriverCond);
+                pthread_cond_signal(&cond);
+            }
+            else
+            {
+                if(WorkModeNotify == 2)
+                {
+                    pthread_mutex_lock(&mutexDeviceDriverCond);
+                    WorkModeNotify = 1;
+                    pthread_mutex_unlock(&mutexDeviceDriverCond);
+                    pthread_cond_signal(&cond);
+                }
+                else
+                {
+                    pthread_mutex_lock(&mutexDeviceDriverCond);
+                    WorkModeNotify = m_workmodeshadow;
+                    pthread_mutex_unlock(&mutexDeviceDriverCond);
+                    pthread_cond_signal(&cond);
+                }
+            }
+            _log.LOG_INFO("生产模式变更：m_workmodeshadow = 【%d】",m_workmodeshadow);
+            QProgressDialog *progressDlg=new QProgressDialog(this);
+            QFont font;
+            font.setPointSize(18);
+            progressDlg->setFont(font);
+            progressDlg->setFixedHeight(160);
+            progressDlg->setWindowModality(Qt::WindowModal);
+            progressDlg->setMinimumDuration(0);
+            progressDlg->setAttribute(Qt::WA_DeleteOnClose, true);
+            progressDlg->setLabelText(tr("正在切换工作模式请等待......"));
+            progressDlg->setCancelButton(0);
+            progressDlg->setStyleSheet("QProgressBar{border:1px solid #FFFFFF;"
+                                                             "height:30;"
+                                                             "background:blue;"
+                                                             "text-align:center;"
+                                                             "color:rgb(255,255,0);"
+                                                             "border-radius:10px;}"
+                                         "QProgressBar::chunk{"
+                                                             "border-radius:0px;"
+                                                             "border:0px solid green;"
+                                                             "background:green;}"
+                                                            );
+            progressDlg->setRange(0,13);
+            progressDlg->setValue(0);
+            int timenum = 0;
+            for(;timenum < 13;timenum++)
+            {
+                sleep(1);
+                progressDlg->setValue(timenum + 1);
+                if(timenum == 10)
+                {
+                    break;
+                }
+            }
+            if(WorkModeNotify != m_workmodeshadow)
+            {
+                pthread_mutex_lock(&mutexDeviceDriverCond);
+                WorkModeNotify = m_workmodeshadow;
+                pthread_mutex_unlock(&mutexDeviceDriverCond);
+                pthread_cond_signal(&cond);
+            }
+            for(;timenum < 13;timenum++)
+            {
+                sleep(1);
+                progressDlg->setValue(timenum + 1);
+            }
+            progressDlg->close();
+        }
+
+        if(m_enableSampleMode != EnableSampleMode)
+        {
+            EnableSampleMode = m_enableSampleMode;
+            _log.LOG_INFO("样件模式切换完成：EnableSampleMode = 【%d】",EnableSampleMode);
+        }
+
+        PBoxConfig::m_setWorkMode = -1;
+    }
 }

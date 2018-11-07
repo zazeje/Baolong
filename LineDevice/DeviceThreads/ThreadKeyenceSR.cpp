@@ -470,7 +470,7 @@ string ThreadKeyenceSR::D3GetBarCode(string barcode, KeyencePara type)
 string ThreadKeyenceSR::D3GetPriorStationJR(string flag, string barCode)
 {
     //CALL `get_product_status`('1', '96216708', '0A062950', '10')
-    string jr;
+    string jr = "0";
     MYSQL_ROW row;
     MYSQL_RES* result;
     MYSQL* m_connection = new MYSQL;
@@ -492,7 +492,6 @@ string ThreadKeyenceSR::D3GetPriorStationJR(string flag, string barCode)
     else
     {
         _log.LOG_ERROR("ThreadKeyenceSR 【%s】 取前工位判定结果【失败】",_di.Name.data());
-        return "0";
     }
 
     _log.LOG_DEBUG("ThreadKeyenceSR 【%s】 前工位判定结果为【%s】",_di.Name.data(),jr.data());

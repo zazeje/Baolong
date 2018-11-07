@@ -1,4 +1,5 @@
 ﻿#include "TcpServer.h"
+#include "../PBOXUI/PBoxConfig.h"
 #include "main.h"
 
 bool TcpServer::sendToPC = false;
@@ -332,6 +333,12 @@ void TcpServer::parseJsonCommand(string command)
             int startpos = atoi(root["StartPos"].asString().data());
             int copynum = atoi(root["FileNum"].asString().data());
             parseExportLogCommand(startpos,copynum);
+        }
+        else if(!name.compare("ChangeWorkMode"))
+        {
+            int modeIndex = atoi(root["WorkMode"].asString().data());
+            if(PBoxConfig::m_setWorkMode == -1)
+                PBoxConfig::m_setWorkMode = modeIndex;
         }
     }
 }
@@ -905,3 +912,4 @@ void TcpServer::startShellThread(enum longTimeCmd currcmdindex,string shellcmd,i
         _log.LOG_DEBUG("TcpServer shell 【%s】 executed tv_start【%d】，【%d】",shellcmd.data(),m_tv_start.tv_sec,m_tv_start.tv_usec);
     }
 }
+

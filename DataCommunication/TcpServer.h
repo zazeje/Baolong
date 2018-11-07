@@ -119,6 +119,7 @@ private:
     void parseUpdateConfigCommand();
     void parseExportLogCommand(int startpos,int copynum);
     void parseVersonMd5Command(int state);
+    void parseChangeWorkMode(int modeIndex);
     void dealWithShellResult(int result);
     void checkShellResult();
     void sendMessagetoTcpServer();
