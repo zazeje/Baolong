@@ -21,11 +21,8 @@ ThreadTekDMM6500::ThreadTekDMM6500(DeviceInfo di) : DeviceThread(di)
     m_bInitResult = false;
     devTest = lowPassrate;
     m_displayValue = "";
-    characteristic = TekNone;
     m_currentgear = "";
     m_currentrange = "";
-    m_range1 = "";
-    m_range2 = "";
 
     if(_di.type == "1")
         myTcpDevice = new TekDMM6500MultimeterTcp(atoi(_di.Port.data()),_di.Ip,_di.Name);
@@ -57,7 +54,7 @@ bool ThreadTekDMM6500::InitTekDMM6500Device()
         size_t parameterNum = _di.parameterNo.size();
         size_t testItemNum = _di.testItemCode.size();
         devPara = TekcurrGear;
-        m_currentgear = getParameterNoInfo();
+        m_currentgear = getDevParaStr();
         if(m_currentgear.empty())
         {
             m_db.Write_TagMValue(_di.devParaAlarm,"1");
@@ -67,21 +64,16 @@ bool ThreadTekDMM6500::InitTekDMM6500Device()
         else
         {
             if((testItemNum == 1) && (parameterNum == 2))
-            {//电池电压测试+卡车线静态或发射测试
-                m_currentrange = getMachinePara(characteristic);
-                if(characteristic != TekNone)
-                {
-                    m_range1 = m_currentrange;
-                    m_range2 = "";
-                    myTcpDevice->InitPara(m_currentgear,m_range1,m_range2);
-                }
-                else
+            {//电池电压测试,或卡车线静态电流,或发射测试电流
+                devPara = TekNone;
+                m_currentrange = getDevParaStr();
+                if(m_currentrange.empty())
                 {
                     m_db.Write_TagMValue(_di.devParaAlarm,"1");
                     bRet = false;
                 }
                 //获得测试项条目的下标
-                int index = getTestItemCode();
+                int index = getTestItemCode(0);
             /*****************************************
              *
              *       lowPassrate = 1,        //静态电流/静态电压
@@ -91,22 +83,22 @@ bool ThreadTekDMM6500::InitTekDMM6500Device()
              *       minLimit                //发射电压判定
              *
              * ***************************************/
-                if((index == (int)TekstaticElectricTest) && (characteristic == TekstaticElectric))
+                if((index == (int)TekstaticElectricTest) && devPara == TekstaticElectric)
                 {
                      devTest = lowPassrate;
                      _coefficient = 1000*1000;
                 }
-                else if((index == (int)TeksendElectricTest) && (characteristic == TeksendElectric))
+                else if((index == (int)TeksendElectricTest) && devPara == TeksendElectric)
                 {
                     devTest = maxLimit;
                     _coefficient = 1000;
                 }
-                else if((index == (int)TekstaticVoltageTest) && (characteristic == TekstaticVoltage))
+                else if((index == (int)TekstaticVoltageTest) && devPara == TekstaticVoltage)
                 {
                     devTest = minLimit;
                     _coefficient = 1;
                 }
-                else if((index == (int)TeksendVoltageTest) && (characteristic == TeksendVoltage))
+                else if((index == (int)TeksendVoltageTest) && devPara == TeksendVoltage)
                 {
                     devTest = minLimit;
                     _coefficient = 1;
@@ -116,17 +108,14 @@ bool ThreadTekDMM6500::InitTekDMM6500Device()
                     _coefficient = 1;
                     bRet = false;
                 }
-                _log.LOG_DEBUG("ThreadTektronix 【%s】当前档位【%s】,量程【%s】测试项编号【%d】返回值【%s】",_di.Name.data(),m_currentgear.data(),m_range1.data(),index,bRet?"true":"false");
+                bRet = true;
+                _log.LOG_DEBUG("ThreadTektronix 【%s】当前档位【%s】,量程【%s】测试项编号【%d】返回值【%s】",_di.Name.data(),m_currentgear.data(),m_currentrange.data(),index,bRet?"true":"false");
             }
             else if((testItemNum == 2) && (parameterNum == 3))
-            {//
-                characteristic = TekcurrGear;
+            {//D线静态电流，动态电流在一个工位测试
                 devPara = TekstaticElectric;
-                m_currentrange = getParameterNoInfo();
-                m_range1 = m_currentrange;
-                devPara = TeksendElectric;
-                m_range2 = getParameterNoInfo();
-                if(m_range1.empty() || m_range2.empty())
+                m_currentrange = getDevParaStr();
+                if(m_currentrange.empty())
                 {
                     bRet = false;
                     m_db.Write_TagMValue(_di.devParaAlarm,"1");
@@ -135,9 +124,9 @@ bool ThreadTekDMM6500::InitTekDMM6500Device()
                 {
                     devTest = lowPassrate;
                     _coefficient = 1000*1000;
-                    myTcpDevice->InitPara(m_currentgear,m_range1,m_range2);
                 }
-                _log.LOG_DEBUG("ThreadTektronix 【%s】静态电流量程【%s】发射电流量程【%s】",_di.Name.data(),m_range1.data(),m_range2.data());
+                _log.LOG_DEBUG("ThreadTektronix 【%s】静态电流量程【%s】发射电流量程【待查】",_di.Name.data(),m_currentrange.data());
+                bRet = true;
             }
             else
             {
@@ -148,6 +137,7 @@ bool ThreadTekDMM6500::InitTekDMM6500Device()
 
         if(bRet)
         {
+            myTcpDevice->InitPara(m_currentgear,m_currentrange);
             bRet = myTcpDevice->InitDevice();
         }
         return bRet;
@@ -157,31 +147,6 @@ bool ThreadTekDMM6500::InitTekDMM6500Device()
         _log.LOG_DEBUG("ThreadTektronix 【%s】 设备类型不正确",_di.Name.data());
         return false;
     }
-}
-
-string ThreadTekDMM6500::getParameterNoInfo()
-{
-    string data = "";
-    for(int i = 0;i < _di.parameterNo.size();i++)
-    {
-        int type = atoi((const char*)_di.parameterNo.at(i).data());
-        if(type == devPara)
-        {
-            if(_di.parameter.size() > i)
-                data = _di.parameter.at(i);
-            else
-                _log.LOG_ERROR("ThreadTektronix 【%s】 获取加工参数失败",_di.Name.data());
-            break;
-        }
-    }
-    if(data.empty())
-        _log.LOG_ERROR("ThreadTektronix 【%s】 获取加工参数【失败】 参数数组大小为：【%d】",_di.Name.data(),_di.parameterNo.size());
-//    if(devPara == TekstaticElectric)
-//        data = ":SENS:CURR:RANG 0.00002";
-//    else if(devPara == TeksendElectric)
-//        data = ":SENS:CURR:RANG 0.02";
-
-    return data;
 }
 
 void ThreadTekDMM6500::threadprocess()
@@ -214,13 +179,6 @@ void ThreadTekDMM6500::threadprocess()
                 string code = kvpt.TagCode;
                 kvpt.MemortValue= m_db.Read_TagMValue(kvpt.TagName);
 
-                /**************************************************************
-                 *
-                 *      D结构线第一、三、五次SC为静态电流开始（需要切换为uA）
-                 *
-                 *      D结构线第二、四、六次为发射电流开始（切换为mA）
-                 *
-                 * ***********************************************************/
                 if (!code.compare("SC"))
                 {
                     if(!kvpt.MemortValue.compare("1"))
@@ -229,34 +187,26 @@ void ThreadTekDMM6500::threadprocess()
                         _log.LOG_DEBUG("ThreadTektronix 【%s】 检测到电压或电流开始采集信号!",_di.Name.data());
                         if(m_bInitResult)
                         {
-                            if(characteristic == TekcurrGear)
-                            {
-                                _workTimes++;
-                                CollectCurrent(_workTimes);                        //批量读取电流值
-                                string partNoId = m_db.Read_TagMValue(_di.IdFlag);
-                                string partSeqNo = m_db.Read_TagMValue(_di.SnFlag);
-                                _log.LOG_DEBUG("ThreadTektronix 【%s】设备 序列号为【%s】 产品ID为【%s】",_di.Name.data(),partSeqNo.data(),partNoId.data());
-                                int index = processD3Line(partNoId, partSeqNo);
-                                _log.LOG_DEBUG("ThreadTektronix 【%s】特征值为【%s】",_di.Name.data(),pi.testItemEigenValue.data());
-                                saveToSql(partNoId, partSeqNo,index);
-                                sendValueToTcpServer(pi.testItemEigenValue);
-                            }
-                            else if(characteristic != TekNone)
-                            {
-                                CollectMeasData();                        //批量读取电流值
-                                string partNoId = m_db.Read_TagMValue(_di.IdFlag);
-                                string partSeqNo = m_db.Read_TagMValue(_di.SnFlag);
-                                _log.LOG_DEBUG("ThreadTektronix 【%s】设备 序列号为【%s】 产品ID为【%s】",_di.Name.data(),partSeqNo.data(),partNoId.data());
-                                int index = processTruckLine(partNoId, partSeqNo);
-                                _log.LOG_DEBUG("ThreadTektronix 【%s】特征值为【%s】",_di.Name.data(),pi.testItemEigenValue.data());
-                                saveToSql(partNoId, partSeqNo,index);
-                                sendValueToTcpServer(pi.testItemEigenValue);
-                            }
-                            else
-                            {
-                                m_db.Write_TagMValue(_di.iValue, "参数【错误】，不测试");
-                                _log.LOG_DEBUG("ThreadTektronix 【%s】 参数【错误】，不测试!",_di.Name.data());
-                            }
+#ifdef _TruckLine
+                            CollectMeasData();                        //批量读取电流值
+                            string partNoId = m_db.Read_TagMValue(_di.IdFlag);
+                            string partSeqNo = m_db.Read_TagMValue(_di.SnFlag);
+                            _log.LOG_DEBUG("ThreadTektronix 【%s】设备 序列号为【%s】 产品ID为【%s】",_di.Name.data(),partSeqNo.data(),partNoId.data());
+                            int index = processTruckLine(partNoId, partSeqNo);
+                            _log.LOG_DEBUG("ThreadTektronix 【%s】特征值为【%s】",_di.Name.data(),pi.testItemEigenValue.data());
+                            saveToSql(partNoId, partSeqNo,index);
+                            sendValueToTcpServer(pi.testItemEigenValue);
+#else
+                            _workTimes++;
+                            CollectCurrent(_workTimes);                        //批量读取电流值
+                            string partNoId = m_db.Read_TagMValue(_di.IdFlag);
+                            string partSeqNo = m_db.Read_TagMValue(_di.SnFlag);
+                            _log.LOG_DEBUG("ThreadTektronix 【%s】设备 序列号为【%s】 产品ID为【%s】",_di.Name.data(),partSeqNo.data(),partNoId.data());
+                            int index = processD3Line(partNoId, partSeqNo);
+                            _log.LOG_DEBUG("ThreadTektronix 【%s】特征值为【%s】",_di.Name.data(),pi.testItemEigenValue.data());
+                            saveToSql(partNoId, partSeqNo,index);
+                            sendValueToTcpServer(pi.testItemEigenValue);
+#endif
                         }
                         else
                         {
@@ -269,39 +219,24 @@ void ThreadTekDMM6500::threadprocess()
                 {
                     if(!kvpt.MemortValue.compare("1"))
                     {
-//                        _stopColl = true;
                         usleep(500*1000);
                         m_db.Write_TagMValue(kvpt.TagName,"0");
-//                        string partNoId = m_db.Read_TagMValue(_di.IdFlag);
-//                        string partSeqNo = m_db.Read_TagMValue(_di.SnFlag);
-//                        _log.LOG_DEBUG("ThreadTektronix 【%s】设备 序列号为【%s】 产品ID为【%s】",_di.Name.data(),partSeqNo.data(),partNoId.data());
-//                        processTruckLine(partNoId, partSeqNo);
-//                        _log.LOG_DEBUG("ThreadTektronix 【%s】特征值为【%s】",_di.Name.data(),pi.testItemEigenValue.data());
-//                        saveToSql(partNoId, partSeqNo,0);
-//                        sendValueToTcpServer(pi.testItemEigenValue);
                     }
                 }
                 //处理通信状态
                 else if(!code.compare("CS"))
                 {
-                    //正在采集数据则通信状态点为"1"
-//                    if(!_stopColl)
-//                        _connectstatus = "1";
-//                    else
-//                    {
-                        //两秒钟检测一次通信状态
-                        if(_counter % 20 == 0)
-                        {
-                            CommunicateTest();
-                            _counter = 1;
-                        }
-//                    }
+                    //两秒钟检测一次通信状态
+                    if(_counter % 20 == 0)
+                    {
+                        CommunicateTest();
+                        _counter = 1;
+                    }
                 }
             }
         }
         _counter++;
     }
-//    _stopColl = true;
     _log.LOG_INFO("ThreadTektronix 【%s】 线程驱动已停止....",_di.Name.data());
 }
 
@@ -317,12 +252,14 @@ int ThreadTekDMM6500::getTestItemInfo()
 }
 
 
-int ThreadTekDMM6500::getTestItemCode()
+int ThreadTekDMM6500::getTestItemCode(int index)
 {
     for(int i=0; i<_di.testItemCode.size();i++)
     {
-        return atoi(_di.testItemCode.at(i).data());
+        if(i == index)
+            return atoi(_di.testItemCode.at(i).data());
     }
+    return 0;
 }
 
 void *ThreadTekDMM6500::Start_Thread(void* arg)
@@ -375,15 +312,6 @@ void ThreadTekDMM6500::CollectDataProcess()
     pos = atoi(_di.testStartPos.data());
     string sCollectValue = _num + "$" + "CV" + IntToString(pos);
 #endif
-
-    /*************************************************************
-     *
-     *  D结构线第一、三、五次SC为静态电流开始（_coefficient = 1000*1000）
-     *
-     *  D结构线第二、四、六次SC为发射电流开始（_coefficient = 1000）
-     *
-     * ***********************************************************/
-
 
     while(!_stopprocess)
     {
@@ -459,30 +387,37 @@ void ThreadTekDMM6500::Init()
     }
 }
 
-string ThreadTekDMM6500::getMachinePara(TekDMM6500ParameterItem &paraIndex)
+string ThreadTekDMM6500::getDevParaStr()
 {
-    paraIndex = TekNone;
     string data = "";
     for(int i = 0;i < _di.parameterNo.size();i++)
     {
         int type = atoi((const char*)_di.parameterNo.at(i).data());
-        if(type != (int)TekcurrGear)
-        {
-            if((type == (int)TekstaticElectric) || (type == (int)TeksendElectric) || (type == (int)TekstaticVoltage) || (type == (int)TeksendVoltage))
-            {
-                if(_di.parameter.size() > i)
-                {
-                    data = _di.parameter.at(i);
-                    paraIndex = (TekDMM6500ParameterItem)type;
-                }
-            }
+        if(devPara == TekcurrGear && type == (int)devPara)
+        {//获取当前档位参数
+            data = _di.parameter.at(i);
             break;
+        }else
+        {//获取当前其中一个量程参数
+            if((int)devPara == TekNone && type != (int)TekcurrGear){
+                devPara = (TekDMM6500ParameterItem)type;
+                data = _di.parameter.at(i);
+                break;
+            }else
+            {//获取当前指定的一个量程参数
+                if((int)devPara == (TekDMM6500ParameterItem)type){
+                    data = _di.parameter.at(i);
+                    break;
+                }
+                else
+                    data = "";
+            }
         }
     }
     if(data.empty())
-    {
         _log.LOG_ERROR("ThreadTektronix 【%s】 获取加工参数失败",_di.Name.data());
-    }
+    else
+        _log.LOG_DEBUG("ThreadTektronix 【%s】 获取加工参数 %s ",_di.Name.data(),data.data());
     return data;
 }
 
@@ -511,16 +446,15 @@ void ThreadTekDMM6500::CommunicateTest()
     else
     {
         m_db.Write_TagMValue(_num + "$" + "NT","");
-//      _log.LOG_DEBUG("ThreadTektronix 【%s】 通信检测【成功】",_di.Name.data());
     }
 }
 
 void ThreadTekDMM6500::CollectCurrent(int workTimes)
 {
-    //设置测试、判定参数
+    //设置加工项参数，测试项参数
     setTestPara(workTimes);
-    //获取采集参数
-    string para = getParameterNoInfo();
+    //获取加工项参数内容
+    string para = getDevParaStr();
     if(_di.type == "1")
     {
         myTcpDevice->SendCommand(para+"\n");
@@ -546,7 +480,6 @@ int ThreadTekDMM6500::processD3Line(string partNoId, string partSeqNo)
             //获得测试项条目的下标
             index = getTestItemInfo();
             //处理采集值,进行判定
-            _log.LOG_ERROR("zz DMM6500 565 index :%d",index);
             ProcessCValue(pi, index, devTest, _cValue);
             pi.testItemCode = _di.testItemCode.at(index);
             getJRVaule();
@@ -622,7 +555,7 @@ int ThreadTekDMM6500::processTruckLine(string partNoId, string partSeqNo)
         if(_di.testItemCode.size() > 0)
         {
             //获得测试项条目的下标
-            index = getTestItemCode();
+            index = getTestItemCode(0);
         /*****************************************
          *
          *       lowPassrate = 1,        //静态电流/静态电压
@@ -728,24 +661,21 @@ void ThreadTekDMM6500::processEndFlag()
 void ThreadTekDMM6500::sendValueToTcpServer(string cValue)
 {
     //向上位机传值
-    if(characteristic == TekcurrGear)
+#ifdef _TruckLine
+    int pos=0;
+    pos = atoi(_di.testStartPos.data());
+    string sCollectValue = _num + "$" + "CV" + IntToString(pos);
+    m_db.Write_TagMValue(sCollectValue, cValue);
+#else
+    if(_workTimes % 2 != 0)
     {
-        if(_workTimes % 2 != 0)
-        {
-            string sCollectValue1 = _num + "$" + "CV1";
-            m_db.Write_TagMValue(sCollectValue1, cValue);
-        }
-        else
-        {
-            string sCollectValue2 = _num + "$" + "CV2";
-            m_db.Write_TagMValue(sCollectValue2, cValue);
-        }
+        string sCollectValue1 = _num + "$" + "CV1";
+        m_db.Write_TagMValue(sCollectValue1, cValue);
     }
     else
     {
-        int pos=0;
-        pos = atoi(_di.testStartPos.data());
-        string sCollectValue = _num + "$" + "CV" + IntToString(pos);
-        m_db.Write_TagMValue(sCollectValue, cValue);
+        string sCollectValue2 = _num + "$" + "CV2";
+        m_db.Write_TagMValue(sCollectValue2, cValue);
     }
+#endif
 }

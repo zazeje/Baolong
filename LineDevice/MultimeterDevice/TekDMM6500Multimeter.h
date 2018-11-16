@@ -18,14 +18,12 @@ public:
     string GetIdn();                        //从万用表读取IDN
     string GetSystemError();                //从万用表读取错误信息
     bool Beep();                            //向万用表写入报警请求
-    bool CleraError();                      //清除万用表错误信息
-    bool MeasVolt(double rang = 0,double nplc = 0); //电压测试
-    bool MeasCurr(double rang = 0,double nplc = 0); //电流测试
+    bool ClearError();                      //清除万用表错误信息
 
     bool SetWorkModeByBatch();              //设置批量读取模式
     string GetValueByBatch(int _coefficient);               //批量读取万用表的值
     bool InitDevice();                      //初始化万用表设备
-    void InitPara(string gearPara,string rangePara1,string rangePara2);
+    void InitPara(string gearParaStr,string rangParaStr);
 
 private:
 
@@ -49,9 +47,9 @@ private:
     string WaitRead;
     string GetBuf100;
     string ClearBuf100;
+
     string m_gearPara;
-    string m_rangePara1;
-    string m_rangePara2;
+    string m_rangePara;
 };
 
 #endif // TEKDMM6500_H

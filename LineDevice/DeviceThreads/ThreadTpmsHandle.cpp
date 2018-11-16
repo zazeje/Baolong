@@ -311,6 +311,7 @@ void ThreadTpmsHandle::processStart()
                     _log.LOG_DEBUG("ThreadTpmsHandle 【%s】设备 产品ID为【%s】 序列号为【%s】",_di.Name.data(),_id.data(),partSeqNo.data());
 
                     ParseScannerID(_id,partSeqNo);
+                    _counter = 1;
 
                     if(pi.testItemEigenValue.empty())
                         pi.testItemEigenValue = "NG";
@@ -376,7 +377,7 @@ void ThreadTpmsHandle::processStart()
                             _counter = 1;
                         }
                     }
-                 }
+                }
             }
         }
         _counter++;
@@ -393,7 +394,7 @@ void ThreadTpmsHandle::ParseScannerID(string _id,string partSeqNo)
         sendID(_id);
         m_mode = Power;
         _stopColl = false;
-        sleep(9);
+        sleep(4);
         _stopColl = true;
         judgeTpmsCheck(pi.testItemJudgeResult);
         noJudge();

@@ -18,13 +18,13 @@
 enum TekDMM6500ParameterItem       //加工参数枚举
 {
     TekNone=0,
-    TekstaticElectric,                 //静态电流参数
-    TeksendElectric,                     //发射电流参数
+    TekstaticElectric,                   //静态电流测量量程参数
+    TeksendElectric,                     //发射电流测量量程参数
     TekoutputFormat,                     //皮安计输出参数
     TekcurrentEnable,                    //皮安计电流使能参数
-    TekstaticVoltage,                    //静态电压参数
-    TeksendVoltage,                      //发射电压参数
-    TekcurrGear,                         //当前档位参数
+    TekstaticVoltage,                    //静态电压测量量程参数
+    TeksendVoltage,                      //发射电压测量量程参数
+    TekcurrGear,                         //当前档位参数,测量电压或电流
 };
 
 enum TekDMM6500TestItem            //测试项参数枚举
@@ -64,10 +64,10 @@ private:
     string startFlag;
     CommunicationType type;
     TekDMM6500MultimeterTcp *myTcpDevice;
-    string m_currentgear;
-    string m_currentrange;
-    string m_range1;
-    string m_range2;
+    string m_currentgear;//当前使用的档位，测试电流，或测试电压
+    string m_currentrange;//当前使用的测量电流，或测量电压的量程
+//    string m_range1;//加工项参数中的量程1
+//    string m_range2;//加工项参数中的量程2
     bool m_bInitResult;
 
     bool _stopColl;
@@ -75,13 +75,13 @@ private:
     void Init();
     bool InitTekDMM6500Device();
     void CollectDataProcess();
-    TekDMM6500ParameterItem devPara;
-    TekDMM6500ParameterItem characteristic;
-    JudgeMethod devTest;
-    int getTestItemInfo();
-    int getTestItemCode();
+    TekDMM6500ParameterItem devPara;//当前要查询的加工项参数的索引
+//    TekDMM6500ParameterItem characteristic;
+    JudgeMethod devTest;//当前要查询的测试项参数的索引
+    int getTestItemInfo();//获取当前测试项参数的索引
+    int getTestItemCode(int index);
     ServerProductInfo spi;
-    string getMachinePara(TekDMM6500ParameterItem &paraIndex);
+    string getDevParaStr();//获取加工项参数的内容
     void CollectCurrent(int workTimes);
     void CollectMeasData();
 
@@ -90,12 +90,12 @@ private:
     vector<string> m_PartSeqNoVector;
     vector<string> m_PartIdVector;
     vector<string> m_JR;
-    int processD3Line(string partNoId, string partSeqNo);
-    int processTruckLine(string partNoId, string partSeqNo);
+    int processD3Line(string partNoId, string partSeqNo);//D线处理
+    int processTruckLine(string partNoId, string partSeqNo);//卡车线处理
     void getJRVaule();
     void startJudge();
 
-    string getParameterNoInfo();
+//    string getParameterNoInfo();
     void sendValueToTcpServer(string cValue);
     void CommunicateTest();
     void clearData(string tagName);

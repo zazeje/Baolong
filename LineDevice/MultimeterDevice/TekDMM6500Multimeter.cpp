@@ -100,31 +100,9 @@ bool TekDMM6500MultimeterTcp::Beep()
     return Write(SysiBeep,"Ascii");
 }
 
-bool TekDMM6500MultimeterTcp::CleraError()
+bool TekDMM6500MultimeterTcp::ClearError()
 {
-    return Write(Cls,"Ascii");
-}
-
-bool TekDMM6500MultimeterTcp::MeasVolt(double rang,double nplc)
-{
-    bool ok = false;
-    ok = Write(FuncVoltDc+endStr,"Ascii");
-    if(rang)
-        ok = Write(VoltRang+DoubleToString(rang)+endStr,"Ascii");
-    if(nplc)
-        ok = Write(VoltNplc+DoubleToString(nplc)+endStr,"Ascii");
-    return ok;
-}
-
-bool TekDMM6500MultimeterTcp::MeasCurr(double rang,double nplc)
-{
-    bool ok = false;
-    ok = Write(FuncCurrDc+endStr,"Ascii");
-    if(rang)
-        ok = Write(CurrRang+DoubleToString(rang)+endStr,"Ascii");
-    if(nplc)
-        ok = Write(CurrNplc+DoubleToString(nplc)+endStr,"Ascii");
-    return ok;
+    return Write(Cls+"\n","Ascii");
 }
 
 bool TekDMM6500MultimeterTcp::SetWorkModeByBatch()
@@ -147,7 +125,7 @@ string TekDMM6500MultimeterTcp::GetValueByBatch(int _coefficient)
         return result;
     usleep(4500 * 1000);
     result = WriteAndRead(GetBuf100+endStr,"Ascii",100);
-    _log.LOG_DEBUG("TekDMM6500Tcp 批量读取电流值 【%s】",result.data());
+    //_log.LOG_DEBUG("TekDMM6500Tcp 批量读取电流值 【%s】",result.data());
 
     string returnRes = "";
     vector<string> values;
@@ -175,13 +153,14 @@ bool TekDMM6500MultimeterTcp::InitDevice()
 {
     bool bRet = true;
     //初始化万用表档位
-    if(!SendCommand(m_gearPara))
+    ClearError();
+    if(!SendCommand(m_gearPara+"\n"))
     {
         bRet = false;
     }
     else
     {
-        if(!SendCommand(m_rangePara1))
+        if(!SendCommand(m_rangePara+"\n"))
         {
             bRet = false;
         }
@@ -193,19 +172,16 @@ bool TekDMM6500MultimeterTcp::InitDevice()
             }
         }
     }
-    _log.LOG_DEBUG("AgilentMultimeterTcp 【%s】 InitDevice【%s】，gearPara=【%s】 rangePara1=【%s】 rangePara2=【%s】",Name.data(),bRet?"OK":"NG", m_gearPara.data(),m_rangePara1.data(),m_rangePara2.data());
+    _log.LOG_DEBUG("AgilentMultimeterTcp 【%s】 InitDevice【%s】，gearPara=【%s】 rangePara=【%s】",Name.data(),bRet?"OK":"NG", m_gearPara.data(),m_rangePara.data());
     return bRet;
 }
 
 /**
  * @brief 将泰克万用表初始化的参数
  * @param gearPara   要初始化的万用表档位参数
- * @param rangePara1    要初始化的万用表量程参数1
- * @param rangePara2    要初始化的万用表量程参数2
  */
-void TekDMM6500MultimeterTcp::InitPara(string gearPara,string rangePara1,string rangePara2)
+void TekDMM6500MultimeterTcp::InitPara(string gearParaStr,string rangeParaStr)
 {
-    m_gearPara = gearPara;
-    m_rangePara1 = rangePara1;
-    m_rangePara2 = rangePara2;
+    m_gearPara = gearParaStr;
+    m_rangePara = rangeParaStr;
 }

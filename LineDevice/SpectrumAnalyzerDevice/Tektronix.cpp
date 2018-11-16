@@ -381,7 +381,7 @@ vector<string> Tektronix::AutoPowerJudge(DeviceInfo di)
     KeepMode();
     //测试中
     cout<<"Tektronix is Collecting Value .... "<<endl;
-    sleep(11);
+    sleep(6);
     cout<<"Tektronix is Collecting 时间8秒 .... "<<endl;
     AddMark();
     MarkTop();
