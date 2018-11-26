@@ -442,10 +442,19 @@ void ThreadTekDMM6500::CommunicateTest()
     {
         _log.LOG_ERROR("ThreadTektronix 【%s】 通信检测【失败】",_di.Name.data());
         m_db.Write_TagMValue(_num + "$" + "NT",_di.Name + " 连接异常");
+        connectRetryCount ++;
+        if(connectRetryCount >= 5){
+            connectRetryCount = 0;
+            TcpDevice * dst = new TcpDevice(5030,_di.Ip);
+            usleep(500*1000);
+            dst->Close();
+            delete dst;
+        }
     }
     else
     {
         m_db.Write_TagMValue(_num + "$" + "NT","");
+        connectRetryCount = 0;
     }
 }
 

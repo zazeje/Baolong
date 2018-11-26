@@ -25,19 +25,14 @@ class TcpDevice
 public:
 
     TcpDevice(int port ,string ip );
-    TcpDevice(int port ,string ip ,int clientPort,string name);
     TcpDevice(int port ,string ip , string name);
     virtual ~TcpDevice();
 
     struct sockaddr_in address;
-    bool Connect();
     virtual void Close();
     virtual bool InitDevice();
-    void TcpSocketClose();
-    bool SocketInit(int port,string ip);
     void test();
     bool threadprocess();
-    bool Restart_Tcp();
     bool Stop();
     int GetSocketFd();
     void SetSocketFd(int m_fd);
@@ -47,6 +42,10 @@ public:
     string endStr;
 
 protected:
+    bool Restart_Tcp();
+    bool Connect();
+    void TcpSocketClose();
+    bool SocketInit(int port,string ip);
 
     bool m_communicateStatus;
     //受限方法

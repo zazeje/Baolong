@@ -53,6 +53,8 @@ public:
 
 private:
 
+    int connectRetryCount;
+
     bool _reinitflag;
     bool _stopprocess;
     bool _updateFlag;

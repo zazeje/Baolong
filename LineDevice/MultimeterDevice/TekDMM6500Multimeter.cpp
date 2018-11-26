@@ -26,7 +26,7 @@ TekDMM6500MultimeterTcp::TekDMM6500MultimeterTcp(int port ,string ip) : TcpDevic
     ClearBuf100 = "TRACe:CLEar \"buf100\"";
 }
 
-TekDMM6500MultimeterTcp::TekDMM6500MultimeterTcp(int port,string ip,string name) : TcpDevice(port,ip,4001,name)
+TekDMM6500MultimeterTcp::TekDMM6500MultimeterTcp(int port,string ip,string name) : TcpDevice(port,ip,name)
 {
     SysiBeep = ":SYSTem:BEEPer 500, 1";
     FuncVoltDc = ":SENS:FUNC \"VOLT:DC\"";
@@ -155,20 +155,16 @@ bool TekDMM6500MultimeterTcp::InitDevice()
     //初始化万用表档位
     ClearError();
     if(!SendCommand(m_gearPara+"\n"))
-    {
         bRet = false;
-    }
-    else
-    {
-        if(!SendCommand(m_rangePara+"\n"))
-        {
+    else{
+        if(!SendCommand(m_Read+"\n"))
             bRet = false;
-        }
-        else
-        {
-            if(!SetWorkModeByBatch())
-            {
+        else{
+            if(!SendCommand(m_rangePara+"\n"))
                 bRet = false;
+            else{
+                if(!SetWorkModeByBatch())
+                    bRet = false;
             }
         }
     }
