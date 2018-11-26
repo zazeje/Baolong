@@ -152,7 +152,7 @@ bool ThreadTekDMM6500::InitTekDMM6500Device()
 void ThreadTekDMM6500::threadprocess()
 {
     _log.LOG_INFO("【%s】线程驱动已启动.....",_di.Name.data());
-
+    connectRetryCount = 0;
     //得到设备编号
     getDeviceNum();
     //初始化结构体参数
@@ -445,10 +445,31 @@ void ThreadTekDMM6500::CommunicateTest()
         connectRetryCount ++;
         if(connectRetryCount >= 5){
             connectRetryCount = 0;
-            TcpDevice * dst = new TcpDevice(5030,_di.Ip);
+            /*Use the dead socket termination port to manually disconnect a dead session on any open socket. All
+            existing ethernet connections will be terminated and closed when the connection to the dead socket
+            termination port is closed.*/
+            //创建一个用来通讯的socket
+            int sock = socket(AF_INET,SOCK_STREAM, 0);
+            if(sock < 0)
+            {
+                _log.LOG_ERROR("ThreadTektronix 【%s】 创建DST SOCKET 失败",_di.Name.data());
+            }
+
+            //需要connect的是对端的地址，因此这里定义服务器端的地址结构体
+            struct sockaddr_in server;
+            server.sin_family = AF_INET;
+            server.sin_port = htons(5030);
+            server.sin_addr.s_addr = inet_addr(_di.Ip.data());
+            socklen_t len = sizeof(struct sockaddr_in);
+            if(connect(sock, (struct sockaddr*)&server, len) < 0 )
+            {
+                _log.LOG_ERROR("ThreadTektronix 【%s】 连接DST 5030失败",_di.Name.data());
+            }
+
             usleep(500*1000);
-            dst->Close();
-            delete dst;
+            close(sock);
+            usleep(500*1000);
+            Init();
         }
     }
     else

@@ -154,13 +154,14 @@ bool TekDMM6500MultimeterTcp::InitDevice()
     bool bRet = true;
     //初始化万用表档位
     ClearError();
+    SendCommand("*RST\n");
     if(!SendCommand(m_gearPara+"\n"))
         bRet = false;
     else{
-        if(!SendCommand(m_Read+"\n"))
+        if(!SendCommand(m_rangePara+"\n"))
             bRet = false;
         else{
-            if(!SendCommand(m_rangePara+"\n"))
+            if(!SendCommand(m_Read+"\n"))
                 bRet = false;
             else{
                 if(!SetWorkModeByBatch())
