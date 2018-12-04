@@ -29,6 +29,8 @@ PlcPointBase::PlcPointBase()
 #else
         SerialPortParameters* spp = new SerialPortParameters("COM4",9600,7,1,1);
         m_device = new FxPlc(spp,"PLC触摸屏",dedicatedProtocol,false);
+//        SerialPortParameters* spp = new SerialPortParameters("COM4",9600,7,1,2);
+//        m_device = new FxPlc(spp,"PLC触摸屏",programProtocol,false);
 #endif
 
         pthread_t th;

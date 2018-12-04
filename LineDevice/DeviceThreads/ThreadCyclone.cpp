@@ -38,11 +38,16 @@ void ThreadCyclone::threadprocess()
     getDeviceNum();
     //向烧程器添加SAP烧程文件
 #ifndef _Debug
-    if(!Init())
-    {
-       return;
-    }
+//    if(!Init())
+//    {
+//       return;
+//    }
 #endif
+
+    //烧程良品点
+    m_cycloneOk = D3GetPLCCyclonOK();
+    //烧程不良品点
+    m_cycloneNG = D3GetPLCCyclonNG();
 
     while (!_stopprocess)
     {
@@ -61,14 +66,16 @@ void ThreadCyclone::threadprocess()
            {
                Tag tag = im->second;
                string name = tag.TagCode;
+//               cout<<"zz Read_TagMValue "<<__FILE__<<" : "<<__FUNCTION__<<" line "<<__LINE__<< tag.TagName<<endl;
                tag.MemortValue = m_db.Read_TagMValue (tag.TagName);
                //处理烧程信号
-               if(!name.compare("D3SP"))
+               if(!name.compare("LDJG"))
                {
                    if (!tag.MemortValue.compare("1"))
                    {
                        _log.LOG_DEBUG("ThreadCyclone 【%s】 检测到烧程信号！",_di.Name.data());
                        m_db.Write_TagMValue(tag.TagName,"0");
+//                       cout<<"zz Read_TagMValue "<<__FILE__<<" : "<<__FUNCTION__<<" line "<<__LINE__<<_di.SnFlag<<endl;
                        string partSeqNo = m_db.Read_TagMValue(_di.SnFlag);
                        _log.LOG_DEBUG("ThreadCyclone 【%s】 序列号为【%s】",_di.Name.data(),partSeqNo.data());
                        string partNoID = processCyclone(partSeqNo);
@@ -348,6 +355,8 @@ string ThreadCyclone::processCyclone(string partSeqNo)
         if(!address.empty())
         {
             partNoID = startToCyclone(address);
+        }else{
+            m_db.Write_TagMValue(m_cycloneNG,"1");
         }
     }
     else
@@ -355,6 +364,7 @@ string ThreadCyclone::processCyclone(string partSeqNo)
         m_db.Write_TagMValue(_di.JudgeResult, "0");
         _log.LOG_DEBUG("ThreadCyclone 【%s】 获取序列号为【空】，不进行测试，直接判定为【不良品】",_di.Name.data());
         m_db.Write_TagMValue(_di.IdFlag,"扫码失败，不进行测试，直接判定为【不良品】");
+        m_db.Write_TagMValue(m_cycloneNG,"1");
     }
     return partNoID;
 }
@@ -396,6 +406,7 @@ string ThreadCyclone::startToCyclone(string address)
         m_db.Write_TagMValue(_di.JudgeResult, "0");
         m_db.Write_TagMValue(_di.IdFlag, "数据库取ID【失败】");
         pi.testItemEigenValue = "NG";
+        m_db.Write_TagMValue(m_cycloneNG,"1");
     }
     else
     {
@@ -413,6 +424,7 @@ string ThreadCyclone::startToCyclone(string address)
             m_db.Write_TagMValue(_di.JudgeResult, "1");
             //界面显示
             m_db.Write_TagMValue(_di.IdFlag, "烧程ID为：【" + programId + "】");
+            m_db.Write_TagMValue(m_cycloneOk,"1");
         }
         else
         {
@@ -423,6 +435,7 @@ string ThreadCyclone::startToCyclone(string address)
             m_db.Write_TagMValue(_di.JudgeResult, "0");
             //界面显示
             m_db.Write_TagMValue(_di.IdFlag, "烧程失败");
+            m_db.Write_TagMValue(m_cycloneNG,"1");
         }
         return programId;
     }
@@ -444,3 +457,48 @@ void ThreadCyclone::CommunicateTest()
     }
 }
 
+string ThreadCyclone::D3GetPLCCyclonOK()                                //D3线获取PLC“扫码不良”点位
+{
+    string plcScanOk;
+    for(map<string,DeviceInfo>::iterator it = gLine.Si.Dis.begin(); it != gLine.Si.Dis.end();it++)
+    {
+        DeviceInfo di = it->second;
+        if(di.Name == "1#PLC")
+        {
+            for(map<string, UnitInfo>::iterator it = di.Units.begin();it != di.Units.end();it++)
+            {
+                map<string, Tag> tags = it->second.Tags;
+                for(map<string, Tag>::iterator im = tags.begin();im != tags.end();im++)
+                {
+                    Tag tag = im->second;
+                    if(tag.TagCode == "JGOK")
+                        plcScanOk = (tag.TagName);
+                }
+            }
+        }
+    }
+    return plcScanOk;
+}
+
+string ThreadCyclone::D3GetPLCCyclonNG()                                //D3线获取PLC“扫码良”点位
+{
+    string plcScanNG;
+    for(map<string,DeviceInfo>::iterator it = gLine.Si.Dis.begin(); it != gLine.Si.Dis.end();it++)
+    {
+        DeviceInfo di = it->second;
+        if(di.Name == "1#PLC")
+        {
+            for(map<string, UnitInfo>::iterator it = di.Units.begin();it != di.Units.end();it++)
+            {
+                map<string, Tag> tags = it->second.Tags;
+                for(map<string, Tag>::iterator im = tags.begin();im != tags.end();im++)
+                {
+                    Tag tag = im->second;
+                    if(tag.TagCode == "JGNG")
+                        plcScanNG = (tag.TagName);
+                }
+            }
+        }
+    }
+    return plcScanNG;
+}

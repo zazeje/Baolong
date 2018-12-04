@@ -105,42 +105,7 @@ void ThreadFxPlc::ProcessUnit(UnitInfo ui)
 //                }
             }
         }
-#ifdef _D2Line
-        //处理逻辑控制模式为内存数据库控制设备的点位
-        else if(!tag.LogicalMode.compare("MCD"))
-        {
-            if (!tag.MemortValue.compare("1"))
-            {
-                if(tag.Address != 110)
-                {
-                    _log.LOG_DEBUG("ThreadFxPlc 【MCD模式】 检测到 【%s】 【%s】 地址【%d】 内存数据库值为1",_di.Name.data(),tag.Name.data(),tag.Address);
-                    //检测到实时库值为1 重置实时库值为0
-                    m_db.Write_TagMValue(key,"0");
-                }
-                else
-                {
-                    m_db.Write_TagMValue(key,"");
-                }
 
-                //向关联控制点写1
-                for (list<string>::reverse_iterator i = tag.CTagNames.rbegin();i != tag.CTagNames.rend();i++)
-                {
-                    string cTagName = *i;
-                    m_db.Write_TagMValue(cTagName,"1");
-                }
-                //向PLC地址写1
-                bool res = myDevice->WriteBits(tag.Address, "1", "M");
-                _log.LOG_DEBUG("ThreadFxPlc 【MCD模式】 向PLC【%s】 PLC地址【%d】 置位结果为【%d】",tag.Name.data(),tag.Address,res);
-            }
-            //针对于D2线烧程工位、电流测试工位扫码不良置位M110
-            else if(tag.Address == 110 && tag.MemortValue != "")
-            {
-                myDevice->WriteBits(tag.Address, tag.MemortValue, "M");
-                m_db.Write_TagMValue(key,"");
-                _log.LOG_DEBUG("ThreadFxPlc 【MCD模式】 向PLC【扫码不良】点位写【%s】",tag.MemortValue.data());
-            }
-        }
-#else
         //处理逻辑控制模式为内存数据库控制设备的点位
         else if(!tag.LogicalMode.compare("MCD"))
         {
@@ -169,7 +134,7 @@ void ThreadFxPlc::ProcessUnit(UnitInfo ui)
                     _log.LOG_DEBUG("ThreadFxPlc 【MCD模式】 向PLC【%s】 PLC地址【%d】 置位结果为【%d】",tag.Name.data(),tag.Address,res);
             }
         }
-#endif
+
         //处理通信状态点位
         if(!tag.TagCode.compare("CS"))
         {

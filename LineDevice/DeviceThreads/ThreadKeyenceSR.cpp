@@ -45,9 +45,12 @@ void ThreadKeyenceSR::threadprocess()
     getDeviceNum();                     //1#扫码器/2#扫码器
     //获取PLC“扫码不良”点位
     m_scanOk = D3GetPLCScanOK();
+    m_scanNG = D3GetPLCScanNG();
 
     for(int i=0;i<m_scanOk.size();i++)
-        cout<<"i = "<<i<<" -- plcNG = "<<m_scanOk.at(i)<<endl;
+        cout<<"i = "<<i<<" -- plcOK = "<<m_scanOk.at(i)<<endl;
+    for(int i=0;i<m_scanNG.size();i++)
+        cout<<"i = "<<i<<" -- plcNG = "<<m_scanNG.at(i)<<endl;
 
     while (!_stopprocess)
     {
@@ -70,7 +73,7 @@ void ThreadKeyenceSR::threadprocess()
                tag.MemortValue = m_db.Read_TagMValue(tag.TagName);
 
                //烧程工位(扫序列号)
-               if (!name.compare("D3SC1") || !name.compare("D3SC2") || !name.compare("D3SC3") || !name.compare("D3SC4"))
+               if (!name.compare("LDSM"))
                {
                    if(!tag.MemortValue.compare("1"))
                    {
@@ -86,7 +89,7 @@ void ThreadKeyenceSR::threadprocess()
                        StationInfo::ProductCount++;
                    }
                }
-               //电池组装工位（视觉检测）
+/*               //电池组装工位（视觉检测）
                else if(!name.compare("D3SV"))
                {
                    if(!tag.MemortValue.compare("1"))
@@ -194,7 +197,7 @@ void ThreadKeyenceSR::threadprocess()
 #endif
                        processScanD3NG();
                    }
-               }
+               }*/
 
                //处理通信状态点
                else if (!name.compare("CS"))
@@ -210,6 +213,7 @@ void ThreadKeyenceSR::threadprocess()
                    for(list<string>::iterator it = tag.CTagNames.begin();it != tag.CTagNames.end();it++)
                    {
                        string key = *it;
+//                       cout<<"zz Write_TagMValue "<<__FILE__<<" : "<<__FUNCTION__<<" line "<<__LINE__<<key<<endl;
                        m_db.Write_TagMValue(key,tag.MemortValue);                      
                    }
                }
@@ -520,13 +524,40 @@ vector<string> ThreadKeyenceSR::D3GetPLCScanOK()
                 for(map<string, Tag>::iterator im = tags.begin();im != tags.end();im++)
                 {
                     Tag tag = im->second;
-                    if(tag.TagCode == "NG" || tag.TagCode == "NG1" || tag.TagCode == "NG2")
+                    if(tag.TagCode == "SMOK" || tag.TagCode == "SMOK1" || tag.TagCode == "SMOK2")
                         plcScanOk.push_back(tag.TagName);
                 }
             }
         }
     }
     return plcScanOk;
+}
+
+/**
+ * @brief ThreadKeyenceSR::D3GetPLCScanNG               获取PLC“扫码良品”点位
+ * @return                                              返回PLC“扫码良品”点位
+ */
+vector<string> ThreadKeyenceSR::D3GetPLCScanNG()
+{
+    vector<string> plcScanNG;
+    for(map<string,DeviceInfo>::iterator it = gLine.Si.Dis.begin(); it != gLine.Si.Dis.end();it++)
+    {
+        DeviceInfo di = it->second;
+        if(di.Name == "1#PLC")
+        {
+            for(map<string, UnitInfo>::iterator it = di.Units.begin();it != di.Units.end();it++)
+            {
+                map<string, Tag> tags = it->second.Tags;
+                for(map<string, Tag>::iterator im = tags.begin();im != tags.end();im++)
+                {
+                    Tag tag = im->second;
+                    if(tag.TagCode == "SMNG" || tag.TagCode == "SMNG1" || tag.TagCode == "SMNG2")
+                        plcScanNG.push_back(tag.TagName);
+                }
+            }
+        }
+    }
+    return plcScanNG;
 }
 
 /**
@@ -566,9 +597,9 @@ bool ThreadKeyenceSR::checkBarCodeState()
 {
     if(StringToUpper(m_barCode).find("ERROR") != std::string::npos || m_barCode.empty())
     {
-         _log.LOG_ERROR("ThreadKeyenceSR 【%s】扫码【失败】,读扫码值为空!",_di.Name.data());
-         m_barCode="";
-         m_db.Write_TagMValue(_di.BarCode, "扫码失败");
+//         _log.LOG_ERROR("ThreadKeyenceSR 【%s】扫码【失败】,读扫码值为空!",_di.Name.data());
+//         m_barCode="";
+//         m_db.Write_TagMValue(_di.BarCode, "扫码失败");
          pi.testItemJudgeResult = 0;
          m_db.Write_TagMValue(_di.JudgeResult,"0");
          return false;
@@ -589,17 +620,20 @@ void ThreadKeyenceSR::processScanD3SC(string name)
          m_db.Write_TagMValue(_di.BarCode, "扫码结果为：【" + m_barCode + "】");            //界面显示
          if(m_scanOk.size() == 1)
          {
-               m_db.Write_TagMValue(m_scanOk.at(0), "1");          //扫码良品，向PLC扫码不良点（M114）置位
+               m_db.Write_TagMValue(m_scanOk.at(0), "1");          //扫码良品，向PLC扫码良点（M113）置位
          }
+    }else{
+        _log.LOG_ERROR("ThreadKeyenceSR 【%s】扫码【失败】,读扫码值为空!",_di.Name.data());
+        m_barCode="";
+        m_db.Write_TagMValue(_di.BarCode, "扫码失败"); //界面显示
+        if(m_scanNG.size() == 1)
+        {
+              m_db.Write_TagMValue(m_scanNG.at(0), "1");          //扫码良品，向PLC扫码不良点（M114）置位
+        }
     }
     getPointIndex(name);
+//    cout<<"zz Write_TagMValue "<<__FILE__<<" : "<<__FUNCTION__<<" line "<<__LINE__<< _di.SnFlag + m_pointIndex<<endl;
     m_db.Write_TagMValue(_di.SnFlag + m_pointIndex, m_barCode);
-
-//    if(name.length() == 5)      //name == D3SC1/D3SC2/D3SC3/D3SC4
-//    {
-//        string stationNum = name.substr(name.length()-1, 1);
-//        m_db.Write_TagMValue(_di.SnFlag + stationNum, m_barCode);
-//    }
 }
 
 /**
@@ -698,12 +732,12 @@ void ThreadKeyenceSR::processScanD3SD(string name)
  */
 void ThreadKeyenceSR::dealWithScanOkPoint(string name)
 {
-    //只有1个扫码不良点
+    //只有1个扫码良点
     if(m_scanOk.size() == 1)
     {
           m_db.Write_TagMValue(m_scanOk.at(0), "1");          //扫码良品，向PLC扫码良品点（M114）置位
     }
-    //有2个扫码不良点
+    //有2个扫码良点
     else if(m_scanOk.size() == 2)
     {
          getPointIndex(name);
@@ -711,6 +745,28 @@ void ThreadKeyenceSR::dealWithScanOkPoint(string name)
              m_db.Write_TagMValue(m_scanOk.at(0), "1");          //扫码良品，向PLC扫码良品点（M114）置位
          else if(m_pointIndex == "2")
              m_db.Write_TagMValue(m_scanOk.at(1), "1");          //扫码良品，向PLC扫码良品点（M124）置位
+    }
+}
+
+/**
+ * @brief ThreadKeyenceSR::dealWithScanNGPoint                   向PLC扫码良品点置位
+ * @param name
+ */
+void ThreadKeyenceSR::dealWithScanNGPoint(string name)
+{
+    //只有1个扫码不良点
+    if(m_scanNG.size() == 1)
+    {
+          m_db.Write_TagMValue(m_scanNG.at(0), "1");          //扫码良品，向PLC扫码良品点（M114）置位
+    }
+    //有2个扫码不良点
+    else if(m_scanNG.size() == 2)
+    {
+         getPointIndex(name);
+         if(m_pointIndex == "1")
+             m_db.Write_TagMValue(m_scanNG.at(0), "1");          //扫码良品，向PLC扫码良品点（M114）置位
+         else if(m_pointIndex == "2")
+             m_db.Write_TagMValue(m_scanNG.at(1), "1");          //扫码良品，向PLC扫码良品点（M124）置位
     }
 }
 
@@ -810,6 +866,7 @@ void ThreadKeyenceSR::checkPriorStationAction(string name, string flag)
         }
         else
         {
+            dealWithScanNGPoint(name);
             m_db.Write_TagMValue(_di.BarCode, "获取前工位为【不良品】，不置位【M114】");
             _log.LOG_ERROR("ThreadKeyenceSR 【%s】 扫码结果为：【%s】，获取前工位为【不良品】",_di.Name.data(), m_barCode.data());
 //            m_db.Write_TagMValue(_num + "$" + "MG", "不良品");

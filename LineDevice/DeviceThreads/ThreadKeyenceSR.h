@@ -52,12 +52,14 @@ private:
     pthread_t pth;
     KeyenceSR *myDevice;
     vector<string> m_scanOk;                                        //PLC扫码良品点
+    vector<string> m_scanNG;                                        //PLC扫码不良品点
     string m_barCode;
     string m_value;
     string m_pointIndex;
     string D3GetBarCode(string barcode, KeyencePara type);          //D3线获得产品ID或者序列号
     string D3GetPriorStationJR(string flag, string barCode);        //D3线判断前工位判定结果
     vector<string> D3GetPLCScanOK();                                //D3线获取PLC“扫码不良”点位
+    vector<string> D3GetPLCScanNG();                                //D3线获取PLC“扫码良”点位
     void clearData(string tagName);                                 //清除数据
     bool checkBarCodeState();                                       //检查扫码结果状态
     void processScanD3SC(string name);                              //处理烧程工位(扫序列号)信号
@@ -66,6 +68,7 @@ private:
     void processScanD3SQ(string name);                              //处理（电流测试、电池组装）工位信号
     void processScanD3NG();                                         //处理（外壳打标）工位信号
     void dealWithScanOkPoint(string name);                          //向PLC扫码良品点置位
+    void dealWithScanNGPoint(string name);                          //向PLC扫码不良品点置位
     void writeToSeqNoAndID(string name, string partSeqNo, string partNoID);     //写入序列号、ID到内存缓冲区
     void getPointIndex(string name);                                //获取扫码点名下标
     void sendSeqNoAndIDToTcpServer(string partSeqNo, string partNoId);          //上传序列号、ID、位置给上位机

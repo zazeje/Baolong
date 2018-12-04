@@ -58,6 +58,13 @@ private:
     string startToCyclone(string address);
     void CommunicateTest();
     void SendCycloneInfoToPC(string partNoId,string partSeqNo);
+
+    string m_cycloneOk;                                        //PLC扫码良品点
+    string m_cycloneNG;                                        //PLC扫码不良品点
+
+    string D3GetPLCCyclonOK();                                //D3线获取PLC“扫码不良”点位
+    string D3GetPLCCyclonNG();                                //D3线获取PLC“扫码良”点位
+
 };
 
 
