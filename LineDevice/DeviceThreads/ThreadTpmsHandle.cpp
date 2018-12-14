@@ -394,7 +394,7 @@ void ThreadTpmsHandle::ParseScannerID(string _id,string partSeqNo)
         sendID(_id);
         m_mode = Power;
         _stopColl = false;
-        sleep(4);
+        sleep(7);
         _stopColl = true;
         judgeTpmsCheck(pi.testItemJudgeResult);
         noJudge();
