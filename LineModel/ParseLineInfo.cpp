@@ -362,7 +362,7 @@ LineInfo ParseLineInfo::parseLineInformation(string partNo, string workCenterNo)
         {
             for(int i=0; i<machineInfo.size(); i++)
             {
-//                cout<<"--- name = "<<di.Name<<"---- DeviceCode = "<<di.DeviceCode<<" ---- machCode = "<<machineInfo.at(i).machCode<<endl;
+//                cout<<"--- name = "<<di.Name<<"---- DeviceCode = "<<di.DeviceCode<<" ---- machCode = "<<machineInfo.at(i).machCode<<"----enable = "<<atoi(machineInfo.at(i).enable.data())<<endl;
                 if(!di.DeviceCode.compare(machineInfo.at(i).machCode))
                 {
                     di.machDriverNo = machineInfo.at(i).machDriverNo;
@@ -404,19 +404,22 @@ LineInfo ParseLineInfo::parseLineInformation(string partNo, string workCenterNo)
 
         if(machTestItemInfo.size() > 0)
         {
-            for(int j=0; j<machTestItemInfo.size(); j++)
+            for(int j=0; j<machTestItemInfo.size(); j++)//每个设备有多个测试项
             {
                 if(!di.DeviceCode.compare(machTestItemInfo.at(j).machCode))
                 {
-                    di.testItemCode.push_back(machTestItemInfo.at(j).testItemCode);     //每个设备有多个测试项
-                    di.judgeEneble.push_back(machTestItemInfo.at(j).judgeEneble);
-                    di.errorCode.push_back(machTestItemInfo.at(j).errorCode);
-                    di.standardValue.push_back(machTestItemInfo.at(j).standardValue);
-                    di.maxValue.push_back(machTestItemInfo.at(j).maxValue);
-                    di.minValue.push_back(machTestItemInfo.at(j).minValue);
-                    di.deviation.push_back(machTestItemInfo.at(j).deviation);
-                    di.minPassrate.push_back(machTestItemInfo.at(j).minPassrate);
-                    di.maxLimit.push_back(machTestItemInfo.at(j).maxLimit);
+                    if(machTestItemInfo.at(j).judgeEneble)//该测试项使能为1
+                    {
+                        di.testItemCode.push_back(machTestItemInfo.at(j).testItemCode);
+                        di.judgeEneble.push_back(machTestItemInfo.at(j).judgeEneble);
+                        di.errorCode.push_back(machTestItemInfo.at(j).errorCode);
+                        di.standardValue.push_back(machTestItemInfo.at(j).standardValue);
+                        di.maxValue.push_back(machTestItemInfo.at(j).maxValue);
+                        di.minValue.push_back(machTestItemInfo.at(j).minValue);
+                        di.deviation.push_back(machTestItemInfo.at(j).deviation);
+                        di.minPassrate.push_back(machTestItemInfo.at(j).minPassrate);
+                        di.maxLimit.push_back(machTestItemInfo.at(j).maxLimit);
+                    }
                     _log.LOG_ERROR("ParseLineInfo  machine_test_item_info 【%s】获取测试项参数【成功】",di.Name.data());
                 }
             }
