@@ -237,10 +237,10 @@ int ThreadMicrometer::processMicrometerCheck(string partSeqNo, string partNoId, 
 {
     int index = 0;
     string value;
+    vector<double> result;       //result里面包含2个高度检测设备的值
     if(!partNoId.empty() && !partSeqNo.empty())
     {
         index = getTestItemInfo();
-        vector<double> result;       //result里面包含2个高度检测设备的值
 #ifndef _Debug
         if(_di.type == "1")
             result = myTcpDevice->GetValue();
@@ -287,7 +287,7 @@ int ThreadMicrometer::processMicrometerCheck(string partSeqNo, string partNoId, 
         m_db.Write_TagMValue(_di.iValue,svalue);
     }
 
-    pi.testItemCollectValue = value;
+    pi.testItemCollectValue = DoubleToString(result[0],"%.3f").append("/").append(DoubleToString(result[1],"%.3f"));
     pi.testItemEigenValue = value;
 
     if(pi.testItemEigenValue.empty())

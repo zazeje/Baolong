@@ -294,6 +294,8 @@ bool CycloneProUdp::IsInWorking()
 {
     vector<string> commands = GetCommand("185F");
     string result = SendAndCheck(commands[0], commands[1], 1000L);
+    string cmd2 = commands[2] + "AAAA0000EE";
+    _log.LOG_DEBUG("CycloneProUdp 【%s】烧程过程中，查询是否在忙碌　result: %s cmd2: %s",Name.data(),result.data(),cmd2.data());
     if (!result.compare(commands[2] + "AAAA0000EE")) return true;
     return false;
 }
