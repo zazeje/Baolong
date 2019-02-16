@@ -275,6 +275,9 @@ int ThreadMicrometer::processMicrometerCheck(string partSeqNo, string partNoId, 
         }
 #endif
         value = judgeMicrometerCheck(index,result,paraVec);
+        if(result.size() >= 2)
+            pi.testItemCollectValue = DoubleToString(result[0],"%.3f").append("/").append(DoubleToString(result[1],"%.3f"));
+        pi.testItemEigenValue = value;
     }
     else
     {
@@ -285,10 +288,10 @@ int ThreadMicrometer::processMicrometerCheck(string partSeqNo, string partNoId, 
         svalue += partSeqNo.empty()?("序列号为空，"):("");
         svalue += "直接判定为【不良品】";
         m_db.Write_TagMValue(_di.iValue,svalue);
+        pi.testItemCollectValue = "";
+        pi.testItemEigenValue = "";
     }
 
-    pi.testItemCollectValue = DoubleToString(result[0],"%.3f").append("/").append(DoubleToString(result[1],"%.3f"));
-    pi.testItemEigenValue = value;
 
     if(pi.testItemEigenValue.empty())
         pi.testItemEigenValue = "NG";

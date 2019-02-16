@@ -227,6 +227,7 @@ string CycloneProUdp::GetId(string addressString)
 //    vector<string> commands = addressString.compare("D1F5") ? GetCommand("182E0000DFB204") : GetCommand("182E0000D1F504");
     vector<string> commands = GetCommand("182E0000" + addressString + "04");
     string result = SendAndCheck(commands[0], commands[1], 1000);
+    _log.LOG_DEBUG("CycloneProUdp 【%s】 GetID result: %s",Name.data(),result.data());
     if (result.length() == 26 && !result.substr(0,4).compare("0003") && !result.substr(22,4).compare("00EE"))
     {
         id = result.substr(12, 8);
@@ -403,11 +404,14 @@ string CycloneProUdp::SendAndCheck(string command, string result, long timeout)
           {
               return m_buff[1];
           }
-          else
+          else{
+              _log.LOG_DEBUG("CycloneProUdp 【%s】 m_buff[0] == result %s m_buff[1] is empty.",Name.data(),m_buff[0].data());
               return "";
+          }
       }
       else
-      {
+      {          
+          _log.LOG_DEBUG("CycloneProUdp 【%s】 m_buff[0] : %s != result : %s",Name.data(),m_buff[0].data(),result.data());
           printf("Send Check Error !\n");
           return "";
       }

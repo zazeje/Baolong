@@ -416,13 +416,23 @@ string ThreadCyclone::startToCyclone(string address)
         }
         else
         {
-            _log.LOG_ERROR("ThreadCyclone 【%s】 烧程【失败】",_di.Name.data());
-//          programId.clear();
-            myDevice->Reset();
-            pi.testItemJudgeResult = 0;
-            m_db.Write_TagMValue(_di.JudgeResult, "0");
-            //界面显示
-            m_db.Write_TagMValue(_di.IdFlag, "烧程失败");
+            _log.LOG_DEBUG("ThreadCyclone 【%s】 第二次烧程烧程写ID为【%s】",_di.Name.data(),programId.data());
+            bool programResult2 = myDevice->WriteProgramAndSetId(address,programId);
+            if(programResult2){
+                _log.LOG_DEBUG("ThreadCyclone 【%s】 第二次烧程烧程【成功】",_di.Name.data());
+                pi.testItemJudgeResult = 1;
+                m_db.Write_TagMValue(_di.JudgeResult, "1");
+                //界面显示
+                m_db.Write_TagMValue(_di.IdFlag, "烧程ID为：【" + programId + "】");
+            }else{
+                _log.LOG_ERROR("ThreadCyclone 【%s】 烧程【失败】",_di.Name.data());
+    //          programId.clear();
+                myDevice->Reset();
+                pi.testItemJudgeResult = 0;
+                m_db.Write_TagMValue(_di.JudgeResult, "0");
+                //界面显示
+                m_db.Write_TagMValue(_di.IdFlag, "烧程失败");
+            }
         }
         return programId;
     }
