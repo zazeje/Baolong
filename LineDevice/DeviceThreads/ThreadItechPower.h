@@ -28,11 +28,23 @@ public:
     bool Stop();
 
 private:
+    bool getValue(string &staticV,string &dynamicV);
+    bool checkValue(const string staticV,const string dynamicV);
 
     ItechPowerTcp *myTcpDevice;
     ItechPower *myComDevice;
     bool _stopprocess;
     pthread_t pth;
+    string staticValue;
+    string dynamicValue;
+
+
+
+    string m_PointOk;                                        //PLC扫码良品点
+    string m_PointNG;                                        //PLC扫码不良品点
+
+    string D3GetPLCPointOK();                                //D3线获取PLC“扫码不良”点位
+    string D3GetPLCPointNG();                                //D3线获取PLC“扫码良”点位
 
 };
 

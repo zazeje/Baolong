@@ -187,6 +187,10 @@ void ThreadXse6::ProcessStartThread()
 
     pi.init();
 
+    //烧程良品点
+    m_PointOk = D3GetPLCPointOK();
+    //烧程不良品点
+    m_PointNG = D3GetPLCPointNG();
     getDeviceNum();
 
     while(!_stopprocess)
@@ -212,26 +216,27 @@ void ThreadXse6::ProcessStartThread()
                     {
                         clearData(tag.TagName);
                         _stopColl = false;
+                        sleep(5);
+                        _stopColl = true;
+                        _log.LOG_DEBUG("ThreadXse6 【%s】 检测到停止采集!",_di.Name.data());
+                        pi.Clear();
+
+                        string partNoId = m_db.Read_TagMValue(_di.IdFlag);
+                        string partSeqNo = m_db.Read_TagMValue(_di.SnFlag);
+                        _log.LOG_DEBUG("ThreadXse6 【%s】设备 产品ID为【%s】 序列号为【%s】",_di.Name.data(),partNoId.data(),partSeqNo.data());
+
+                        _log.LOG_DEBUG("ThreadXse6 【%s】强制给OK信号，判定良品. 序列号为【%s】",_di.Name.data(),partSeqNo.data());
+                        m_db.Write_TagMValue(_di.IdFlag,"强制给OK信号，直接判定为【良品】");
+                        m_db.Write_TagMValue(m_PointOk,"1");
+
+                        //processXse6Check(partSeqNo,partNoId,tag);
+
+                        //将产品信息存储到数据库
+                        saveToSql(partNoId, partSeqNo,0);
+
+                        //将视觉检测结果上传至上位机
+                        sendValueToTcpServer(pi.testItemEigenValue);
                     }
-                }
-                //检测到停止采集信号
-                else if(!name.compare("EC") && !tag.MemortValue.compare("1"))
-                {
-                    _stopColl = true;
-                    m_db.Write_TagMValue(tag.TagName,"0");
-                    _log.LOG_DEBUG("ThreadXse6 【%s】 检测到停止采集信号!",_di.Name.data());
-                    pi.Clear();
-
-                    string partNoId = m_db.Read_TagMValue(_di.IdFlag);
-                    string partSeqNo = m_db.Read_TagMValue(_di.SnFlag);
-                    _log.LOG_DEBUG("ThreadXse6 【%s】设备 产品ID为【%s】 序列号为【%s】",_di.Name.data(),partNoId.data(),partSeqNo.data());
-                    processXse6Check(partSeqNo,partNoId,tag);
-
-                    //将产品信息存储到数据库
-                    saveToSql(partNoId, partSeqNo,0);
-
-                    //将视觉检测结果上传至上位机
-                    sendValueToTcpServer(pi.testItemEigenValue);
                 }
                 //处理通信状态
                 else if(!name.compare("CS"))
@@ -343,3 +348,48 @@ double ThreadXse6::GetAverageValue()
     return Average(valueArray);
 }
 
+string ThreadXse6::D3GetPLCPointOK()                                //D3线获取PLC“扫码不良”点位
+{
+    string plcScanOk;
+    for(map<string,DeviceInfo>::iterator it = gLine.Si.Dis.begin(); it != gLine.Si.Dis.end();it++)
+    {
+        DeviceInfo di = it->second;
+        if(di.Name == "1#PLC")
+        {
+            for(map<string, UnitInfo>::iterator it = di.Units.begin();it != di.Units.end();it++)
+            {
+                map<string, Tag> tags = it->second.Tags;
+                for(map<string, Tag>::iterator im = tags.begin();im != tags.end();im++)
+                {
+                    Tag tag = im->second;
+                    if(tag.TagCode == "JGOK")
+                        plcScanOk = (tag.TagName);
+                }
+            }
+        }
+    }
+    return plcScanOk;
+}
+
+string ThreadXse6::D3GetPLCPointNG()                                //D3线获取PLC“扫码良”点位
+{
+    string plcScanNG;
+    for(map<string,DeviceInfo>::iterator it = gLine.Si.Dis.begin(); it != gLine.Si.Dis.end();it++)
+    {
+        DeviceInfo di = it->second;
+        if(di.Name == "1#PLC")
+        {
+            for(map<string, UnitInfo>::iterator it = di.Units.begin();it != di.Units.end();it++)
+            {
+                map<string, Tag> tags = it->second.Tags;
+                for(map<string, Tag>::iterator im = tags.begin();im != tags.end();im++)
+                {
+                    Tag tag = im->second;
+                    if(tag.TagCode == "JGNG")
+                        plcScanNG = (tag.TagName);
+                }
+            }
+        }
+    }
+    return plcScanNG;
+}

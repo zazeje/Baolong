@@ -79,11 +79,9 @@ void ThreadKeyenceSR::threadprocess()
                    {
                        _log.LOG_DEBUG("ThreadKeyenceSR 【%s】检测到【%s】信号 ",_di.Name.data(),name.data());
                        clearData(tag.TagName);
-#ifndef _Debug
                        m_barCode = myDevice->AutoScan(1);
-#else
-                       m_barCode = IntToString(rand());
-#endif
+                       //test
+                       m_barCode = "AD1712230223C";
                        processScanD3SC(name);
                        //界面显示产品个数
                        StationInfo::ProductCount++;
@@ -208,14 +206,15 @@ void ThreadKeyenceSR::threadprocess()
                        _counter = 1;
                    }
                }
-               if(!tag.CTagNames.empty() && _controlFlag)
+               if(!tag.CTagNames.empty() && !tag.MemortValue.empty() && _controlFlag)
                {
+                   //转发信号到其它设备，然后清空自己的结果
                    for(list<string>::iterator it = tag.CTagNames.begin();it != tag.CTagNames.end();it++)
                    {
                        string key = *it;
-//                       cout<<"zz Write_TagMValue "<<__FILE__<<" : "<<__FUNCTION__<<" line "<<__LINE__<<key<<endl;
                        m_db.Write_TagMValue(key,tag.MemortValue);                      
                    }
+                   m_db.Write_TagMValue(tag.TagName,"");
                }
            }
        }
@@ -628,11 +627,12 @@ void ThreadKeyenceSR::processScanD3SC(string name)
         m_db.Write_TagMValue(_di.BarCode, "扫码失败"); //界面显示
         if(m_scanNG.size() == 1)
         {
-              m_db.Write_TagMValue(m_scanNG.at(0), "1");          //扫码良品，向PLC扫码不良点（M114）置位
+//              m_db.Write_TagMValue(m_scanNG.at(0), "1");          //扫码良品，向PLC扫码不良点（M114）置位
+            m_db.Write_TagMValue(m_scanNG.at(0), "1");          //扫码良品，向PLC扫码良点（M113）置位
         }
     }
     getPointIndex(name);
-//    cout<<"zz Write_TagMValue "<<__FILE__<<" : "<<__FUNCTION__<<" line "<<__LINE__<< _di.SnFlag + m_pointIndex<<endl;
+    cout<<"zz Write key "<<_di.SnFlag+ m_pointIndex<<" value "<<m_barCode<<endl;
     m_db.Write_TagMValue(_di.SnFlag + m_pointIndex, m_barCode);
 }
 

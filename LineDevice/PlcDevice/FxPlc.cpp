@@ -495,7 +495,7 @@ bool FxPlc::WriteBitBy422(int address, string value)
     string checkSum = GetSumCheckByAsciiStr(command);
     command = STX + command + checkSum;
     string result = WriteAndRead(command, "Ascii",_delay);
-    _log.LOG_DEBUG("FxPlc WriteBitBy422 读写命令 command = 【%s】 读写返回结果位 【%s】",command.data(),result.data());
+//    _log.LOG_DEBUG("FxPlc WriteBitBy422 读写命令 command = 【%s】 读写返回结果位 【%s】",command.data(),result.data());
     if(!result.empty() && result.data()[0] == ACK[0])
         return true;
     else

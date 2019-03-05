@@ -198,7 +198,7 @@ bool CycloneProUdp::WriteId(string address, string id)
 {
 //    D2线修改为"185D0000" + address + id
 //    vector<string> commands = !address.compare("D1F5") ? GetCommand("185D0000D1F5" + id) : GetCommand("185D0000DFB2" + id);
-    vector<string> commands = GetCommand("185D" + address + id);
+    vector<string> commands = GetCommand("185D0000" + address + id);
     string result = SendAndCheck(commands[0], commands[1], 1000L);
 
     if (result.substr(0,8).compare(commands[2]))
@@ -225,7 +225,7 @@ string CycloneProUdp::GetId(string addressString)
     string id;
 //    D2线修改为"182E0000" + addressString + "04"
 //    vector<string> commands = addressString.compare("D1F5") ? GetCommand("182E0000DFB204") : GetCommand("182E0000D1F504");
-    vector<string> commands = GetCommand("182E" + addressString + "04");
+    vector<string> commands = GetCommand("182E0000" + addressString + "04");
     string result = SendAndCheck(commands[0], commands[1], 1000);
     if (result.length() == 26 && !result.substr(0,4).compare("0003") && !result.substr(22,4).compare("00EE"))
     {

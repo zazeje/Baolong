@@ -1,6 +1,9 @@
 #include "main.h"
 #include "DataHelper/LocalLineInfo.h"
-
+#include "LineDevice/Cnet100Device/Cnet100tcp.h"
+#include "LineDevice/ABBRobotDevice/ABBRobot.h"
+#include "LineDevice/SimulatorDevice/SimulatorTcp.h"
+#include "PBOXUI/SimulatorWidget.h"
 string mainVersion = "V1.0.53";
 string subVersion = ".20180912";
 LineInfo gLine;
@@ -73,9 +76,83 @@ int main(int argc, char *argv[])
 
     _log.LOG_DEBUG("*****************版本号为：【%s】*****************",mainVersion.data());
 
+//    SimulatorTcp *st = new SimulatorTcp(4003,"192.168.10.12");
+//    st->sjkz = "30.0";
+//    st->dk = "0";
+//    st->mk = "0";
+//    //st->mbjl1 = "30";
+//    st->mbsd1 = "300";
+//    st->mbkg1 = "1";
+//    st->mbkg2 = "0";
+//    st->mbkg3 = "0";
+//    st->mbkg4 = "0";
+//    st->jg = "200";
+//    st->zxpl = "24125";
+//    string command = st->CreateCommand();
+//    cout<<"command "<<command<<endl;
+    //string result = st->WriteAndReadHex(command,500);
+    //cout<<"result "<<result<<endl;
+
+   /* sleep(5);
+    Cnet100Tcp * tcp = new Cnet100Tcp(5000,"192.168.10.15");
+    for(int i = 0;i < 99999;i++){
+        string str = tcp->getMessage();
+        int count = str.length()/26;
+        for(int j = 0;j < count; j++){
+            string t = str.substr(j*26,26);
+            if(!t.substr(0,10).compare("0800000500"))
+            {
+                //cout<<HexToBin(t)<<endl;
+                vector<float> ret = tcp->analysis77G500(HexToBin(t));
+                if(ret.size() > 4)
+                    //cout<<ret[0]<<" "<<ret[1]<<" "<<setw(10)<<ret[2]<<" "<<setw(10)<<ret[3]<<" "<<setw(20)<<ret[4]<<" "<<setw(10)<<ret[5]<<" "<<setw(10)<<ret[6]<<endl;
+                usleep(100*1000);
+            }
+            if(!t.substr(0,10).compare("0800000323"))
+            {
+                vector<unsigned int> ret = tcp->analysis24G1T1R323(HexToBin(t));
+                    cout<<"zz"<<ret[0]<<" "<<ret[1]<<" "<<ret[2]<<endl;
+                usleep(100*1000);
+            }
+        }
+    }
+    //bool setMode = tcp->setWorkMode24G1T1R(staticMode);
+
+    tcp->Close();
+    delete tcp;
+*/
+
+    /*ABBRobot *abb = new ABBRobot(1000,"192.168.10.11");
+    float r1 = 0,r2 = 0,r3 = 90;
+    for(int i = 0 ; i < 20 ; i ++){
+        string result = abb->getMessage();
+        if(!result.empty()){
+            if(i == 0)
+                cout<<"ABBrobot 初始姿位:"<<result<<endl;
+            else
+                cout<<"ABBrobot 第"<<i<<"次移动的姿位:"<<result<<endl;
+            char data[80];
+            memset(data,0,80);
+            sprintf(data,"[1,1000.1,10.2,1100,%f,%f,%f,%f]",r1,r2,r3);
+            abb->WriteAscii(data);
+            cout<<"发送姿位[ "<<i<<" ]："<<data<<endl;
+            r3 = r3 + 0.1;
+        }
+        sleep(1);
+    }*/
+
+
+    //bool res = myDevice->WriteBits(tag.Address, "1", "M");选择产品
+
     mainWidget w;
     w.show();
     w.showFullScreen();
+
+//    SimulatorWidget * f = new SimulatorWidget(&w);
+//    f->show();
+//    f->showFullScreen();
+
+
 
     return a.exec();
 }

@@ -120,30 +120,6 @@ void ThreadMicrocaliper::threadprocess()
         //处理信号结束点
         processEndFlag();
 
-//        //设备不使能时,默认设备的判定结果为良品
-//        if(!_di.Enable)
-//        {
-//            m_db.Write_TagMValue(_di.JudgeResult,"1");
-//            _log.LOG_ERROR("ThreadMarkViewCheck 【%s】 设备未使能!!!",_di.Name.data());
-//            continue;
-//        }
-//        //处理设备结束信号
-//        endFlag = m_db.Read_TagMValue(_di.EndFlag);
-//        if (!endFlag.empty() && !endFlag.compare("1"))
-//        {
-//            usleep(500 * 1000);
-//            _log.LOG_DEBUG("ThreadMicrocaliper 【%s】 检测到结束采集信号，清空判定结果，复位结束采集信号点",_di.Name.data());
-//            pi.Clear();
-//            m_db.Write_TagMValue(_di.EndFlag, "");
-//            m_db.Write_TagMValue(_di.IdFlag, "");
-//            m_db.Write_TagMValue(_di.SnFlag, "");
-//            m_db.Write_TagMValue(_di.iValue, "");
-//            m_db.Write_TagMValue(_di.JudgeResult , "");
-//            value.clear();
-//            result1=0.0;
-//            partNoId.clear();
-//            partSeqNo.clear();
-//        }
         //遍历采集点
         for(map<string, UnitInfo>::iterator kvpu = _di.Units.begin();kvpu != _di.Units.end();kvpu++)
         {

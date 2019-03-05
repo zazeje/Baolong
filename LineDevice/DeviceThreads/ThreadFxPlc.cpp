@@ -37,126 +37,130 @@ void ThreadFxPlc::ProcessUnit(UnitInfo ui)
     pvs = myDevice->ReadBits(ui.StartAddress, ui.Length, "M");
 //    _log.LOG_DEBUG("ThreadFxPlc ProcessUnit startAdd = 【%d】 length = 【%d】 pvs = 【%s】",ui.StartAddress,ui.Length,pvs.data());
 
-    //遍历采集单元
-    for(map<string,Tag>::iterator is = ui.Tags.begin();is != ui.Tags.end();is++)
-    {
-        Tag tag;
-        tag = is->second;
-        if(tag.Name.empty())
-            continue;
-        string key = tag.TagName;
-        tag.PlcValue = pvs.data()[tag.Address - ui.StartAddress];
-        tag.MemortValue = m_db.Read_TagMValue(key);
-
-        //处理逻辑控制模式为空的点位
-        if(!tag.LogicalMode.compare("None"))
-        {           
-            m_db.Write_TagMValue(key,tag.PlcValue);
-            //向关联控制点写1
-            for (list<string>::reverse_iterator i = tag.CTagNames.rbegin();i != tag.CTagNames.rend();i++)
-            {
-                string cTagName = *i;
-                m_db.Write_TagMValue(cTagName,tag.PlcValue);
-            }
-
-            //PLC报警，PlcValue值为"1"时，报警
-            if(tag.Address == 115)
-            {
-                if(tag.PlcValue == "1")
-                {
-                    //上位机上传中，"0"代表报警，"1"代表正常
-                    m_db.Write_TagMValue("PLcAlarm", "0");
-//                    _log.LOG_ERROR("ThreadFxPLC 【%s】 PLC【M115】报警 ... ",_di.Name.data());
-                    m_db.Write_TagMValue(_num + "$" + "NT", _di.Name + " 【M115】报警");
-                }
-                else if(tag.PlcValue == "0")
-                {
-                    m_db.Write_TagMValue("PLcAlarm", "1");
-//                    _log.LOG_ERROR("ThreadFxPLC 【%s】 PLC通信正常 ... ",_di.Name.data());
-                }
-            }
-        }
-        //处理逻辑控制模式为设备控制内存数据库的点位
-        else if(!tag.LogicalMode.compare("DCM"))
+    if(pvs.length() > 0 ){
+        //遍历采集单元
+        for(map<string,Tag>::iterator is = ui.Tags.begin();is != ui.Tags.end();is++)
         {
-            if(!tag.PlcValue.compare("1"))
-            {
-                _log.LOG_DEBUG("ThreadFxPlc 【DCM模式】 检测到 【%s】 【%s】 地址【%d】 PLC值为1",_di.Name.data(),tag.Name.data(),tag.Address);
-                m_db.Write_TagMValue(key,tag.PlcValue);
-                //界面显示PLC状态
-                m_db.Write_TagMValue("采集点名", tag.Name + "(M" + IntToString(tag.Address) + ")");
-                //检测到PLC值为1 重置PLC值为0
-                myDevice->WriteBits(tag.Address, "0", "M");
-                _log.LOG_DEBUG("ThreadFxPlc 【DCM模式】 复位PLC点位【%s】 PLC地址【%d】",tag.Name.data(),tag.Address);
+            Tag tag;
+            tag = is->second;
+            if(tag.Name.empty())
+                continue;
+            string key = tag.TagName;
+            tag.PlcValue = pvs.data()[tag.Address - ui.StartAddress];
+            tag.MemortValue = m_db.Read_TagMValue(key);
 
+            //处理逻辑控制模式为空的点位
+            if(!tag.LogicalMode.compare("None"))
+            {
+                m_db.Write_TagMValue(key,tag.PlcValue);
                 //向关联控制点写1
                 for (list<string>::reverse_iterator i = tag.CTagNames.rbegin();i != tag.CTagNames.rend();i++)
                 {
                     string cTagName = *i;
                     m_db.Write_TagMValue(cTagName,tag.PlcValue);
-//                    cout<<"---- cTagName = "<<cTagName<<" --- value = "<<tag.PlcValue<<endl;
                 }
 
-//                //清空界面(display.cpp)PLC的状态
-//                if(tag.TagCode == "END")
-//                {
-//                    usleep(500*1000);
-//                    m_db.Write_TagMValue("采集点名", "");
-//                }
-            }
-        }
-
-        //处理逻辑控制模式为内存数据库控制设备的点位
-        else if(!tag.LogicalMode.compare("MCD"))
-        {
-            if (!tag.MemortValue.compare("1"))
-            {
-                //M101为PLC心跳检测点，每隔1秒置位(不打印)
-                if(tag.Address != 101)
+                //PLC报警，PlcValue值为"1"时，报警
+                if(tag.Address == 115)
                 {
-                    _log.LOG_DEBUG("ThreadFxPlc 【MCD模式】 检测到 【%s】 【%s】 地址【%d】 内存数据库值为1",_di.Name.data(),tag.Name.data(),tag.Address);
-                    //检测到实时库值为1 重置实时库值为0
-                    m_db.Write_TagMValue(key,"0");
+                    if(tag.PlcValue == "1")
+                    {
+                        //上位机上传中，"0"代表报警，"1"代表正常
+                        m_db.Write_TagMValue("PLcAlarm", "0");
+    //                    _log.LOG_ERROR("ThreadFxPLC 【%s】 PLC【M115】报警 ... ",_di.Name.data());
+                        m_db.Write_TagMValue(_num + "$" + "NT", _di.Name + " 【M115】报警");
+                    }
+                    else if(tag.PlcValue == "0")
+                    {
+                        m_db.Write_TagMValue("PLcAlarm", "1");
+    //                    _log.LOG_ERROR("ThreadFxPLC 【%s】 PLC通信正常 ... ",_di.Name.data());
+                    }
+                }
+            }
+            //处理逻辑控制模式为设备控制内存数据库的点位
+            else if(!tag.LogicalMode.compare("DCM"))
+            {
+                if(!tag.PlcValue.compare("1"))
+                {
+                    _log.LOG_DEBUG("ThreadFxPlc 【DCM模式】 检测到 【%s】 【%s】 地址【%d】 PLC值为1",_di.Name.data(),tag.Name.data(),tag.Address);
+
+                    m_db.Write_TagMValue(key,tag.PlcValue);
                     //界面显示PLC状态
                     m_db.Write_TagMValue("采集点名", tag.Name + "(M" + IntToString(tag.Address) + ")");
-                }
+                    //检测到PLC值为1 重置PLC值为0
+                    myDevice->WriteBits(tag.Address, "0", "M");
+                    _log.LOG_DEBUG("ThreadFxPlc 【DCM模式】 复位PLC点位【%s】 PLC地址【%d】",tag.Name.data(),tag.Address);
 
-                //向关联控制点写1
-                for (list<string>::reverse_iterator i = tag.CTagNames.rbegin();i != tag.CTagNames.rend();i++)
-                {
-                    string cTagName = *i;
-                    m_db.Write_TagMValue(cTagName,"1");
+                    //向关联控制点写1
+                    for (list<string>::reverse_iterator i = tag.CTagNames.rbegin();i != tag.CTagNames.rend();i++)
+                    {
+                        string cTagName = *i;
+                        m_db.Write_TagMValue(cTagName,tag.PlcValue);
+                    }
+
+    //                //清空界面(display.cpp)PLC的状态
+    //                if(tag.TagCode == "END")
+    //                {
+    //                    usleep(500*1000);
+    //                    m_db.Write_TagMValue("采集点名", "");
+    //                }
                 }
-                //向PLC地址写1
-                bool res = myDevice->WriteBits(tag.Address, "1", "M");
-                //M101为PLC心跳检测点，每隔1秒置位(不打印)
-                if(tag.Address != 101)
-                    _log.LOG_DEBUG("ThreadFxPlc 【MCD模式】 向PLC【%s】 PLC地址【%d】 置位结果为【%d】",tag.Name.data(),tag.Address,res);
             }
-        }
 
-        //处理通信状态点位
-        if(!tag.TagCode.compare("CS"))
-        {
-            if(_counter % 10 == 0)
+            //处理逻辑控制模式为内存数据库控制设备的点位
+            else if(!tag.LogicalMode.compare("MCD"))
             {
-                _counter = 1;
-                _connectstatus = myDevice->CanAcess() ? "1" : "0";
-                m_db.Write_TagMValue(_di.Alarm, _connectstatus);
-                //PLC心跳检测
-                m_db.Write_TagMValue(_di.beat, "1");
-                if(_connectstatus == "0")
+                if (!tag.MemortValue.compare("1"))
                 {
-                    _log.LOG_ERROR("ThreadFxPlc 【%s】 通信检测【失败】",_di.Name.data());
-                    m_db.Write_TagMValue(_num + "$" + "NT",_di.Name + " 连接异常");
+                    //M101为PLC心跳检测点，每隔1秒置位(不打印)
+                    if(tag.Address != 101)
+                    {
+                        _log.LOG_DEBUG("ThreadFxPlc 【MCD模式】 检测到 【%s】 【%s】 地址【%d】 内存数据库值为1",_di.Name.data(),tag.Name.data(),tag.Address);
+                        //检测到实时库值为1 重置实时库值为0
+                        m_db.Write_TagMValue(key,"0");
+                        //界面显示PLC状态
+                        m_db.Write_TagMValue("采集点名", tag.Name + "(M" + IntToString(tag.Address) + ")");
+                    }
+
+                    //向关联控制点写1
+                    for (list<string>::reverse_iterator i = tag.CTagNames.rbegin();i != tag.CTagNames.rend();i++)
+                    {
+                        string cTagName = *i;
+                        m_db.Write_TagMValue(cTagName,"1");
+                    }
+                    //向PLC地址写1
+                    bool res = myDevice->WriteBits(tag.Address, "1", "M");
+                    //M101为PLC心跳检测点，每隔1秒置位(不打印)
+                    if(tag.Address != 101)
+                        _log.LOG_DEBUG("ThreadFxPlc 【MCD模式】 向PLC【%s】 PLC地址【%d】 置位结果为【%d】",tag.Name.data(),tag.Address,res);
                 }
-                else
+            }
+
+            //处理通信状态点位
+            if(!tag.TagCode.compare("CS"))
+            {
+                if(_counter % 10 == 0)
                 {
-                    m_db.Write_TagMValue(_num + "$" + "NT","");
-//                    _log.LOG_DEBUG("ThreadFxPlc 【%s】 通信检测【正常】",_di.Name.data());
+                    _counter = 1;
+                    _connectstatus = myDevice->CanAcess() ? "1" : "0";
+                    m_db.Write_TagMValue(_di.Alarm, _connectstatus);
+                    //PLC心跳检测
+                    m_db.Write_TagMValue(_di.beat, "1");
+                    if(_connectstatus == "0")
+                    {
+                        _log.LOG_ERROR("ThreadFxPlc 【%s】 通信检测【失败】",_di.Name.data());
+                        m_db.Write_TagMValue(_num + "$" + "NT",_di.Name + " 连接异常");
+                    }
+                    else
+                    {
+                        m_db.Write_TagMValue(_num + "$" + "NT","");
+    //                    _log.LOG_DEBUG("ThreadFxPlc 【%s】 通信检测【正常】",_di.Name.data());
+                    }
                 }
             }
         }
+    }else{
+         //_log.LOG_DEBUG("ThreadFxPlc 读取PLC数据失败 StartAddress %d Length %d %s",ui.StartAddress, ui.Length, "M");
     }
 }
 

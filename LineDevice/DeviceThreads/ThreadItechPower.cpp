@@ -1,5 +1,5 @@
 #include "ThreadItechPower.h"
-
+#include "main.h"
 
 ThreadItechPower::ThreadItechPower()        //稳压电源
 {}
@@ -53,8 +53,6 @@ void ThreadItechPower::threadprocess()
     _log.LOG_DEBUG("ThreadItechPower 【%s】线程驱动已启动......",_di.Name.data());
 
     usleep(100 * 1000);
-
-
     if(_di.type == "1")
     {
         if(!myTcpDevice->Init())
@@ -75,6 +73,10 @@ void ThreadItechPower::threadprocess()
     }
     _log.LOG_DEBUG("ThreadItechPower 【%s】 InitDevice 初始化【成功】",_di.Name.data());
 
+    //烧程良品点
+    m_PointOk = D3GetPLCPointOK();
+    //烧程不良品点
+    m_PointNG = D3GetPLCPointNG();
 
     while(!_stopprocess)
     {
@@ -115,6 +117,45 @@ void ThreadItechPower::threadprocess()
                             myTcpDevice->SetPower();
                         else if(_di.type == "2")
                             myComDevice->SetPower();
+                    }
+                }else if(!name.compare("LDJG"))
+                {
+                    if(!tag.MemortValue.compare("1"))
+                    {
+                        _log.LOG_DEBUG("ThreadItechPower 【%s】 检测到读取电流信号，开始读取电流",_di.Name.data());
+                        m_db.Write_TagMValue(tag.TagName, "0");
+                        staticValue = "";
+                        dynamicValue = "";
+                        string partSeqNo = m_db.Read_TagMValue(_di.SnFlag);
+
+                        _log.LOG_DEBUG("ThreadItechPower 【%s】强制给OK信号，判定良品. 序列号为【%s】",_di.Name.data(),partSeqNo.data());
+                        m_db.Write_TagMValue(_di.IdFlag,"强制给OK信号，直接判定为【良品】");
+                        m_db.Write_TagMValue(m_PointOk,"1");
+
+                        /*if(partSeqNo.empty()){
+                            m_db.Write_TagMValue(_di.JudgeResult, "0");
+                            _log.LOG_DEBUG("ThreadItechPower 【%s】 获取序列号为【空】，不进行测试，直接判定为【不良品】",_di.Name.data());
+                            m_db.Write_TagMValue(_di.IdFlag,"扫码失败，不进行测试，直接判定为【不良品】");
+                            m_db.Write_TagMValue(m_PointNG,"1");
+                            continue;
+                        }
+                        bool ok = getValue(staticValue,dynamicValue);
+                        if(!ok){
+                            _log.LOG_DEBUG("ThreadItechPower 【%s】读取电流数据为空，判定失败. 序列号为【%s】",_di.Name.data(),partSeqNo.data());
+                            m_db.Write_TagMValue(_di.IdFlag,"读取电流数据为空，直接判定为【不良品】");
+                            m_db.Write_TagMValue(m_PointNG,"1");
+                            continue;
+                        }
+                        ok = checkValue(staticValue,dynamicValue);
+                        if(!ok){
+                            _log.LOG_DEBUG("ThreadItechPower 【%s】读取电流数据不合格，判定失败. 序列号为【%s】",_di.Name.data(),partSeqNo.data());
+                            m_db.Write_TagMValue(_di.IdFlag,"读取电流数据不合格，直接判定为【不良品】");
+                            m_db.Write_TagMValue(m_PointNG,"1");
+                        }else{
+                            _log.LOG_DEBUG("ThreadItechPower 【%s】读取电流数据合格，判定良品. 序列号为【%s】",_di.Name.data(),partSeqNo.data());
+                            m_db.Write_TagMValue(_di.IdFlag,"读取电流数据，直接判定为【良品】");
+                            m_db.Write_TagMValue(m_PointOk,"1");
+                        }*/
                     }
                 }
                 //处理通信状态点
@@ -197,3 +238,79 @@ bool ThreadItechPower::Stop()
     return true;
 }
 
+bool ThreadItechPower::getValue(string &staticV, string &dynamicV)
+{
+    string str = "";
+    _log.LOG_DEBUG("ThreadItechPower 【%s】采集静态电流10个......",_di.Name.data());
+    for(int i = 0 ;i < 10;i++)
+    {
+        str += myTcpDevice->ReadCurrent()+"/";
+        usleep(200*1000);
+    }
+    staticV = str;
+    str = "";
+    _log.LOG_DEBUG("ThreadItechPower 【%s】命令发送成功，采集动态电流10个......",_di.Name.data());
+    for(int i = 0 ;i < 10;i++)
+    {
+        str += myTcpDevice->ReadCurrent()+"/";
+        usleep(200*1000);
+    }
+    dynamicV = str;
+    if(!staticV.empty() && !dynamicV.empty())
+        return true;
+    else
+        return false;
+
+}
+
+bool ThreadItechPower::checkValue(const string staticV,const string dynamicV)
+{
+    return true;
+}
+
+
+string ThreadItechPower::D3GetPLCPointOK()                                //D3线获取PLC“扫码不良”点位
+{
+    string plcScanOk;
+    for(map<string,DeviceInfo>::iterator it = gLine.Si.Dis.begin(); it != gLine.Si.Dis.end();it++)
+    {
+        DeviceInfo di = it->second;
+        if(di.Name == "1#PLC")
+        {
+            for(map<string, UnitInfo>::iterator it = di.Units.begin();it != di.Units.end();it++)
+            {
+                map<string, Tag> tags = it->second.Tags;
+                for(map<string, Tag>::iterator im = tags.begin();im != tags.end();im++)
+                {
+                    Tag tag = im->second;
+                    if(tag.TagCode == "JGOK")
+                        plcScanOk = (tag.TagName);
+                }
+            }
+        }
+    }
+    return plcScanOk;
+}
+
+string ThreadItechPower::D3GetPLCPointNG()                                //D3线获取PLC“扫码良”点位
+{
+    string plcScanNG;
+    for(map<string,DeviceInfo>::iterator it = gLine.Si.Dis.begin(); it != gLine.Si.Dis.end();it++)
+    {
+        DeviceInfo di = it->second;
+        if(di.Name == "1#PLC")
+        {
+            for(map<string, UnitInfo>::iterator it = di.Units.begin();it != di.Units.end();it++)
+            {
+                map<string, Tag> tags = it->second.Tags;
+                for(map<string, Tag>::iterator im = tags.begin();im != tags.end();im++)
+                {
+                    Tag tag = im->second;
+                    if(tag.TagCode == "JGNG")
+                        plcScanNG = (tag.TagName);
+                }
+            }
+        }
+    }
+    return plcScanNG;
+}

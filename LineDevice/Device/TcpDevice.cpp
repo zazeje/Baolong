@@ -285,7 +285,8 @@ string TcpDevice::ReadHex()
         }
         for(i=0;i < len;i++)
         {
-            offset += sprintf(m_buff + offset,"%02X",tmp_buf[i]);
+            if(i*2<_bufferSize-1)
+                offset += sprintf(m_buff + offset,"%02X",tmp_buf[i]);
         }
         buff = m_buff;
     }

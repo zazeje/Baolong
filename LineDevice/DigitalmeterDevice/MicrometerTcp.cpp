@@ -64,9 +64,9 @@ vector<double> MicrometerTcp::GetValue()
     if(result.empty())
         return resultVec;
     if(result.length() == 42 && !result.substr(0,6).compare("800310"))
-        result = result.substr(6,16);
+        result = result.substr(6,32);
 //    cout<<"-- result = "<<result<<endl;
-    if(result.length() == 16)
+    if(result.length() == 32)
     {
         int sign1;
         if(!result.substr(0,2).compare("00"))
@@ -87,9 +87,27 @@ vector<double> MicrometerTcp::GetValue()
         int value2 = hextodec(result.substr(12,4));
         double res2 = value2 * sign2 / 1000.0;
 //        cout<<"--- res2 = "<<res2<<endl;
+        resultVec.push_back(res2);
+
+        int sign3;
+        if(!result.substr(16,2).compare("00"))
+            sign3 = 1;
+        else
+            sign3 = -1;
+        int value3 = hextodec(result.substr(20,4));
+        double res3 = value3 * sign3 / 1000.0;
+        resultVec.push_back(res3);
+
+        int sign4;
+        if(!result.substr(24,2).compare("00"))
+            sign4 = 1;
+        else
+            sign4 = -1;
+        int value4 = hextodec(result.substr(28,4));
+        double res4 = value4 * sign4 / 1000.0;
 
 //        resultVec.push_back(DoubleToString(res2,"%.2f"));
-        resultVec.push_back(res2);
+        resultVec.push_back(res4);
         return resultVec;
     }
     return resultVec;

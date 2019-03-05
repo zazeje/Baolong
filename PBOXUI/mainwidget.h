@@ -14,6 +14,7 @@
 #include "DataConvert/DataType.h"
 #include "PBOXUI/PlcInfo/PlcDisplay.h"
 #include "PBOXUI/PlcInfo/PlcState.h"
+#include "PBOXUI/SimulatorWidget.h"
 #include "frminput.h"
 #include "PlcInfo/PlcSetting.h"
 #include "PlcInfo/PlcControl.h"
@@ -31,6 +32,7 @@ class PasswordWidget;
 class PlcDisplay;
 class PlcState;
 class PasswordWidget;
+class SimulatorWidget;
 
 class mainWidget : public QWidget
 {
@@ -52,6 +54,7 @@ public:
     PlcControl* m_plcControl;
     PlcSetting* m_plcSetting;
     PlcModifyItem* m_plcModify;
+    SimulatorWidget *m_simulator;
 
     int widgetFlag;
 
@@ -67,6 +70,7 @@ public slots:
     void showUsrchosewidget();
     void showDisplaywidget();
 //    void showTestWidget();
+    void showSimulatorWidget();
     void slot_pboxconfigclicked();
     void slot_configclicked();
     void PasswordWidgetConfirm();

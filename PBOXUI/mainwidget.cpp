@@ -23,11 +23,7 @@ mainWidget::mainWidget()
     m_passwidget = new PasswordWidget(this);
     m_passwidget->setPalette(palette);
 
-    //构造用户选择窗口
-    m_passwidget = new PasswordWidget(this);
-    m_passwidget->setPalette(palette);
-
-    //用户选择界面
+     //用户选择界面
     m_usrchosewidget = new UsrChoose(this);
     m_usrchosewidget->setPalette(palette);
 
@@ -62,17 +58,20 @@ mainWidget::mainWidget()
     //构造修改PLC项目信息界面
     m_plcModify = new PlcModifyItem(this);
     m_plcModify->setPalette(palette);
+    if(g_dbInfo.GetWorkCenterNo() == "3002" )
+        m_simulator = new SimulatorWidget(this);
 
     //将各窗口添加到窗口堆栈中
     m_stackwidget = new QStackedWidget();
     m_stackwidget->addWidget(m_displaywidget);
     m_stackwidget->addWidget(m_usrchosewidget);
     m_stackwidget->addWidget(m_config);
+    if(g_dbInfo.GetWorkCenterNo() == "3002" )
+        m_stackwidget->addWidget(m_simulator);
 //    m_stackwidget->addWidget(m_testwidget);
     m_stackwidget->addWidget(m_passwidget);
     m_stackwidget->addWidget(m_plcDisplay);
     m_stackwidget->addWidget(m_plcState);
-    m_stackwidget->addWidget(m_passwidget);
     m_stackwidget->addWidget(m_plcControl);
     m_stackwidget->addWidget(m_plcSetting);
     m_stackwidget->addWidget(m_plcModify);
@@ -109,6 +108,8 @@ mainWidget::~mainWidget()
     delete m_displaywidget;
     delete m_config;
 //    delete m_testwidget;
+    if(g_dbInfo.GetWorkCenterNo() == "3002" )
+        delete m_simulator;
     delete m_plcDisplay;
     delete m_plcState;
     delete m_plcControl;
@@ -123,6 +124,11 @@ void mainWidget::showPlcDisplay()
     PlcPointBase::SetDisplayType(5);
     PlcPointBase::SetReadPlcFlag(true);
     m_stackwidget->setCurrentWidget(m_plcDisplay);
+}
+
+void mainWidget::showSimulatorWidget()
+{
+    m_stackwidget->setCurrentWidget(m_simulator);
 }
 
 void mainWidget::showPlcState()

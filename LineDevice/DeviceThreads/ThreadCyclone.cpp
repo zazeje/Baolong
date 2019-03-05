@@ -45,9 +45,9 @@ void ThreadCyclone::threadprocess()
 #endif
 
     //烧程良品点
-    m_cycloneOk = D3GetPLCCyclonOK();
+    m_PointOk = D3GetPLCCyclonOK();
     //烧程不良品点
-    m_cycloneNG = D3GetPLCCyclonNG();
+    m_PointNG = D3GetPLCCyclonNG();
 
     while (!_stopprocess)
     {
@@ -66,7 +66,6 @@ void ThreadCyclone::threadprocess()
            {
                Tag tag = im->second;
                string name = tag.TagCode;
-//               cout<<"zz Read_TagMValue "<<__FILE__<<" : "<<__FUNCTION__<<" line "<<__LINE__<< tag.TagName<<endl;
                tag.MemortValue = m_db.Read_TagMValue (tag.TagName);
                //处理烧程信号
                if(!name.compare("LDJG"))
@@ -75,9 +74,12 @@ void ThreadCyclone::threadprocess()
                    {
                        _log.LOG_DEBUG("ThreadCyclone 【%s】 检测到烧程信号！",_di.Name.data());
                        m_db.Write_TagMValue(tag.TagName,"0");
-//                       cout<<"zz Read_TagMValue "<<__FILE__<<" : "<<__FUNCTION__<<" line "<<__LINE__<<_di.SnFlag<<endl;
                        string partSeqNo = m_db.Read_TagMValue(_di.SnFlag);
+                       m_db.Write_TagMValue(_di.SnFlag,"");
                        _log.LOG_DEBUG("ThreadCyclone 【%s】 序列号为【%s】",_di.Name.data(),partSeqNo.data());
+                       pi.testItemJudgeResult = 1;
+                       m_db.Write_TagMValue(_di.JudgeResult, "1");
+
                        string partNoID = processCyclone(partSeqNo);
 
                        pi.testItemEigenValue = _num;
@@ -356,15 +358,16 @@ string ThreadCyclone::processCyclone(string partSeqNo)
         {
             partNoID = startToCyclone(address);
         }else{
-            m_db.Write_TagMValue(m_cycloneNG,"1");
+            _log.LOG_DEBUG("ThreadCyclone 【%s】 获取写ID地址失败,直接判定为【不良品】",_di.Name.data());
+            m_db.Write_TagMValue(_di.IdFlag,"获取写ID地址失败，直接判定为【不良品】");
+            m_db.Write_TagMValue(m_PointNG,"1");
         }
     }
     else
     {
-        m_db.Write_TagMValue(_di.JudgeResult, "0");
         _log.LOG_DEBUG("ThreadCyclone 【%s】 获取序列号为【空】，不进行测试，直接判定为【不良品】",_di.Name.data());
         m_db.Write_TagMValue(_di.IdFlag,"扫码失败，不进行测试，直接判定为【不良品】");
-        m_db.Write_TagMValue(m_cycloneNG,"1");
+        m_db.Write_TagMValue(m_PointNG,"1");
     }
     return partNoID;
 }
@@ -402,11 +405,9 @@ string ThreadCyclone::startToCyclone(string address)
     if(programId.empty())
     {
         _log.LOG_ERROR("ThreadCyclone 【%s】 数据库取ID【失败】",_di.Name.data());
-        m_db.Write_TagMValue(_num + "$" + "NT","数据库取ID失败");
-        m_db.Write_TagMValue(_di.JudgeResult, "0");
         m_db.Write_TagMValue(_di.IdFlag, "数据库取ID【失败】");
         pi.testItemEigenValue = "NG";
-        m_db.Write_TagMValue(m_cycloneNG,"1");
+        m_db.Write_TagMValue(m_PointNG,"1");
     }
     else
     {
@@ -424,7 +425,7 @@ string ThreadCyclone::startToCyclone(string address)
             m_db.Write_TagMValue(_di.JudgeResult, "1");
             //界面显示
             m_db.Write_TagMValue(_di.IdFlag, "烧程ID为：【" + programId + "】");
-            m_db.Write_TagMValue(m_cycloneOk,"1");
+            m_db.Write_TagMValue(m_PointOk,"1");
         }
         else
         {
@@ -435,7 +436,7 @@ string ThreadCyclone::startToCyclone(string address)
             m_db.Write_TagMValue(_di.JudgeResult, "0");
             //界面显示
             m_db.Write_TagMValue(_di.IdFlag, "烧程失败");
-            m_db.Write_TagMValue(m_cycloneNG,"1");
+            m_db.Write_TagMValue(m_PointNG,"1");
         }
         return programId;
     }

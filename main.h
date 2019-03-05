@@ -3,6 +3,7 @@
 
 #include <QApplication>
 #include <signal.h>
+#include <iomanip>
 #include "PBOXUI/mainwidget.h"
 #include "LineModel/ConfigLoader.h"
 #include "LineDriver/DeviceDriver.h"

@@ -117,7 +117,7 @@ int binaryStrToInt(string src)
 {
     int desc = 0;
     int flag = 0;
-    for(string::iterator i = src.begin();i != src.end();i++)
+    for(string::reverse_iterator i = src.rbegin();i != src.rend();i++)
     {
         int tmp = 0;
         (*i) == '1' ? tmp = pow(2,flag) : tmp = 0;
@@ -1271,3 +1271,96 @@ int g2u(char* inbuf, size_t inlen, char* outbuf, size_t outlen)
      }
      return 1;
  }
+
+ string HexToBin(const string &strHex)
+ {
+     if (strHex.size() % 2 != 0)
+     {
+         return "";
+     }
+
+     string strBin = "";
+     for (size_t i = 0; i < strHex.size(); i++)
+     {
+         string temp = "";
+         switch (strHex[i]){
+         case '0':
+             temp = "0000";
+             break;
+         case '1':
+             temp = "0001";
+             break;
+         case '2':
+             temp = "0010";
+             break;
+         case '3':
+             temp = "0011";
+             break;
+         case '4':
+             temp = "0100";
+             break;
+         case '5':
+             temp = "0101";
+             break;
+         case '6':
+             temp = "0110";
+             break;
+         case '7':
+             temp = "0111";
+             break;
+         case '8':
+             temp = "1000";
+             break;
+         case '9':
+             temp = "1001";
+             break;
+         case 'a': case 'A':
+             temp = "1010";
+             break;
+         case 'b': case 'B':
+             temp = "1011";
+             break;
+         case 'c': case 'C':
+             temp = "1100";
+             break;
+         case 'd': case 'D':
+             temp = "1101";
+             break;
+         case 'e': case 'E':
+             temp = "1110";
+             break;
+         case 'f': case 'F':
+             temp = "1111";
+             break;
+         }
+
+         strBin += temp;
+//         if(i>0 && i % 2 == 1)
+//             strBin += " ";
+     }
+
+     return strBin;
+ }
+
+string MemoryOutPut(const char* buf, size_t len)
+ {
+    string ret = "";
+    char a[3];
+    a[0] = 0;
+    a[1] = 0;
+    a[2] = 0;
+     for(size_t i=0; i<len; ++i)
+     {
+         unsigned char c = buf[i]; // must use unsigned char to print >128 value
+         if( c< 16)
+         {
+             sprintf(a,"0%x", c);
+         }
+         else
+         {
+             sprintf(a,"%x", c);
+         }
+         ret += string((const char *)a);
+     }
+    return ret;
+}

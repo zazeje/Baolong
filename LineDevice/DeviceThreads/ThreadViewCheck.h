@@ -28,7 +28,11 @@ public:
     void CommunicateTest();
 
 private:
+    string m_PointOk;                                        //PLC扫码良品点
+    string m_PointNG;                                        //PLC扫码不良品点
 
+    string D3GetPLCPointOK();                                //D3线获取PLC“扫码不良”点位
+    string D3GetPLCPointNG();
 //    bool _stopprocess;
     pthread_t pth;
     ViewCheck *myDevice;

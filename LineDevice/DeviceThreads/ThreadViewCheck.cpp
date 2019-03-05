@@ -115,6 +115,10 @@ void ThreadViewCheck::threadprocess()
 
     getDeviceNum();
 
+    //烧程良品点
+    m_PointOk = D3GetPLCPointOK();
+    //烧程不良品点
+    m_PointNG = D3GetPLCPointNG();
     while (!_stopprocess)
     {
        usleep(100 * 1000);
@@ -142,6 +146,11 @@ void ThreadViewCheck::threadprocess()
                        string partId = m_db.Read_TagMValue(_di.IdFlag);
                        string partSeqNo = m_db.Read_TagMValue(_di.SnFlag);
                        _log.LOG_DEBUG("ThreadViewCheck 【%s】 id为【%s】 序列号为【%s】",_di.Name.data(),partId.data(),partSeqNo.data());
+
+
+                       _log.LOG_DEBUG("ThreaThreadViewCheckdItechPower 【%s】强制给OK信号，判定良品. 序列号为【%s】",_di.Name.data(),partSeqNo.data());
+                       m_db.Write_TagMValue(_di.IdFlag,"强制给OK信号，直接判定为【良品】");
+                       m_db.Write_TagMValue(m_PointOk,"1");
 
                        processViewCheck(partSeqNo, partId);
 
@@ -221,4 +230,49 @@ bool ThreadViewCheck::Stop()
     myDevice->Close();
     myDevice->CloseReconThread();
     return true;
+}
+string ThreadViewCheck::D3GetPLCPointOK()                                //D3线获取PLC“扫码不良”点位
+{
+    string plcScanOk;
+    for(map<string,DeviceInfo>::iterator it = gLine.Si.Dis.begin(); it != gLine.Si.Dis.end();it++)
+    {
+        DeviceInfo di = it->second;
+        if(di.Name == "1#PLC")
+        {
+            for(map<string, UnitInfo>::iterator it = di.Units.begin();it != di.Units.end();it++)
+            {
+                map<string, Tag> tags = it->second.Tags;
+                for(map<string, Tag>::iterator im = tags.begin();im != tags.end();im++)
+                {
+                    Tag tag = im->second;
+                    if(tag.TagCode == "SJOK")
+                        plcScanOk = (tag.TagName);
+                }
+            }
+        }
+    }
+    return plcScanOk;
+}
+
+string ThreadViewCheck::D3GetPLCPointNG()                                //D3线获取PLC“扫码良”点位
+{
+    string plcScanNG;
+    for(map<string,DeviceInfo>::iterator it = gLine.Si.Dis.begin(); it != gLine.Si.Dis.end();it++)
+    {
+        DeviceInfo di = it->second;
+        if(di.Name == "1#PLC")
+        {
+            for(map<string, UnitInfo>::iterator it = di.Units.begin();it != di.Units.end();it++)
+            {
+                map<string, Tag> tags = it->second.Tags;
+                for(map<string, Tag>::iterator im = tags.begin();im != tags.end();im++)
+                {
+                    Tag tag = im->second;
+                    if(tag.TagCode == "SJNG")
+                        plcScanNG = (tag.TagName);
+                }
+            }
+        }
+    }
+    return plcScanNG;
 }

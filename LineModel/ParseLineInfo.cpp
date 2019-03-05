@@ -427,6 +427,7 @@ LineInfo ParseLineInfo::parseLineInformation(string partNo, string workCenterNo)
         iterdi->second = di;
     }
 
+    cout<<matchDev <<" "<<ConfigLoader::m_deviceNumcount<<endl;
     if((ConfigLoader::m_deviceNumcount != 0) && (matchDev == ConfigLoader::m_deviceNumcount))
     {
         gLine = li;

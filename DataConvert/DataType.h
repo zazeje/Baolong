@@ -230,6 +230,13 @@ int isDigitStr(QString qstr);
 
 //检查IP地址字符串是否合法函数 add by wjl,依赖isDigitStr函数;
 int checkIpStr(QString qstr,string &outstr);
+
+//16进行字符串转成2进行字符串
+string HexToBin(const string &strHex);
+
+//
+string MemoryOutPut(const char * buf,size_t len);
+
 #endif // DATATYPE_H
 
 

@@ -24,6 +24,7 @@ public:
     bool CloseOutput();
     string ReadCurrent();
     string ReadVoltage();
+    string ReadPower();
     bool Init();
 
 private:

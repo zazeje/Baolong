@@ -97,3 +97,18 @@ bool ItechPowerTcp::Init()
     else
         return true;
 }
+
+string ItechPowerTcp::ReadCurrent()
+{
+    return WriteAndReadAscii("FETC:CURR?\n",200);
+}
+
+string ItechPowerTcp::ReadVoltage()
+{
+    return WriteAndReadAscii("FETC:VOLT?\n",200);
+}
+
+string ItechPowerTcp::ReadPower()
+{
+    return WriteAndReadAscii("FETC:POW?\n",200);
+}

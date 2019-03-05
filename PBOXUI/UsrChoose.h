@@ -33,7 +33,7 @@ public:
     QLabel *m_choseLabel;
     QPushButton *m_pboxSettingButton;
     QPushButton *m_displayButton;
-//    QPushButton *m_testButton;
+    QPushButton *m_simulatorButton;
     QPushButton *m_plcStateButton;
     QVBoxLayout *m_contentVBoxLayout;
 
@@ -42,6 +42,7 @@ private slots:
     void pboxSetting();
     void dataDisplay();
 //    void testDisplay();
+    void simulatorDisplay();
     void plcDisplay();
 
 private:

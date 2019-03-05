@@ -34,7 +34,8 @@ ThreadMicrometer::~ThreadMicrometer()
     }
 }
 
-int ThreadMicrometer::getTestItemInfo()
+/*集线器，高度测试就只有一个测试项，索引为0。没有必要写这个函数
+ * int ThreadMicrometer::getTestItemInfo()
 {
     int num=0;
     for(int i=0; i<_di.testItemCode.size(); i++)
@@ -46,7 +47,7 @@ int ThreadMicrometer::getTestItemInfo()
         }
     }
     return num;
-}
+}*/
 
 void ThreadMicrometer::threadprocess()
 {
@@ -60,6 +61,11 @@ void ThreadMicrometer::threadprocess()
 
     //得到设备编号
     getDeviceNum();
+
+    //烧程良品点
+    m_PointOk = D3GetPLCPointOK();
+    //烧程不良品点
+    m_PointNG = D3GetPLCPointNG();
 
     while (!_stopprocess)
     {
@@ -124,6 +130,7 @@ void *ThreadMicrometer::Start_Thread(void* arg)
  */
 bool ThreadMicrometer::Start()
 {
+    _log.LOG_ERROR("ThreadMicrometer 【%s】 高度检测设备采集----",_di.Name.data());
     pthread_attr_t pth_attr;
     pthread_attr_init(&pth_attr);
     pthread_attr_setdetachstate(&pth_attr,PTHREAD_CREATE_DETACHED);
@@ -200,6 +207,38 @@ vector<double> ThreadMicrometer::initDevice()
                 }
             }
             break;
+        case Mircrometer3:
+        {
+            if(_di.parameter.size() > i)
+            {
+                if(!_di.parameter.at(i).empty())
+                {
+                   paraVec.push_back(StringToDouble(_di.parameter.at(i).data()));
+                }
+                else
+                {
+                    _log.LOG_ERROR("ThreadMicrometer 【%s】 获取加工参数Mircrometer3【失败】",_di.Name.data());
+                   m_db.Write_TagMValue(_di.devParaAlarm, "1");
+                }
+            }
+        }
+        break;
+        case Mircrometer4:
+        {
+            if(_di.parameter.size() > i)
+            {
+                if(!_di.parameter.at(i).empty())
+                {
+                   paraVec.push_back(StringToDouble(_di.parameter.at(i).data()));
+                }
+                else
+                {
+                    _log.LOG_ERROR("ThreadMicrometer 【%s】 获取加工参数Mircrometer4【失败】",_di.Name.data());
+                   m_db.Write_TagMValue(_di.devParaAlarm, "1");
+                }
+            }
+        }
+        break;
         default:
             break;
         }
@@ -232,15 +271,23 @@ string ThreadMicrometer::getParameterNoInfo()
  * @param partSeqNo
  * @param partNoId
  * @param paraVec
+ * 返回设备测试项参数的索引。从0开始
  */
 int ThreadMicrometer::processMicrometerCheck(string partSeqNo, string partNoId, vector<double> &paraVec)
 {
     int index = 0;
     string value;
-    if(!partNoId.empty() && !partSeqNo.empty())
+//test .zz
+//    _log.LOG_DEBUG("ThreadMicrometer 【%s】强制给OK信号，判定良品. 序列号为【%s】",_di.Name.data(),partSeqNo.data());
+//    m_db.Write_TagMValue(_di.IdFlag,"强制给OK信号，直接判定为【良品】");
+//    m_db.Write_TagMValue(m_PointOk,"1");
+//    return 1;
+
+    if(/*!partNoId.empty() && !partSeqNo.empty()*/1/*test.zz*/)
     {
-        index = getTestItemInfo();
-        vector<double> result;       //result里面包含2个高度检测设备的值
+        //集线器，高度测试就只有一个测试项，索引为0。没有必要写这个函数
+        /*index = getTestItemInfo();*/
+        vector<double> result;       //result里面包含4个高度检测设备的值
 #ifndef _Debug
         if(_di.type == "1")
             result = myTcpDevice->GetValue();
@@ -321,9 +368,10 @@ void ThreadMicrometer::CommunicateTest()
 string ThreadMicrometer::judgeMicrometerCheck(int index,vector<double>& result,vector<double> &paraVec)
 {
     string value;
-    if(_di.testItemCode.size() > 0 && paraVec.size() == 2)
+    cout<<"zz judgeMicrometerCheck"<<_di.testItemCode.size()<< " "<<paraVec.size()<<endl;
+    if(_di.testItemCode.size() > 0 && paraVec.size() == 4)
     {
-        if(!result.empty() && result.size() == 2 )
+        if(!result.empty() && result.size() == 4 )
         {
             int j=0;
             if((_di.minValue.size() > index) && (_di.maxValue.size() > index))
@@ -393,22 +441,25 @@ void ThreadMicrometer::judgeParameterCheck(vector<double> &paraVec)
  */
 void ThreadMicrometer::updateJudgeResult(int oktimes,int index,vector<double>& result)
 {
-    if(oktimes == 2)          //代表有2个高度检测设备的值，且都在规定范围以内
+    if(oktimes == 4)          //代表有2个高度检测设备的值，且都在规定范围以内
     {
-        _log.LOG_DEBUG("ThreadMicrometer 【%s】 高度检测设备的值 【正确】 最大值为【%f】 最小值为【%f】 采集值1为【%f】 采集值2为【%f】"\
-           ,_di.Name.data(),_di.maxValue.at(index),_di.minValue.at(index),result.at(0),result.at(1));
+        _log.LOG_DEBUG("ThreadMicrometer 【%s】 高度检测设备的值 【正确】 最大值为【%f】 最小值为【%f】 采集值1为【%f】 2为【%f】 3为【%f】 4为【%f】"\
+           ,_di.Name.data(),_di.maxValue.at(index),_di.minValue.at(index),result.at(0),result.at(1),result.at(2),result.at(3));
         pi.testItemJudgeResult = 1;
         m_db.Write_TagMValue(_di.JudgeResult , "1");
 //                                    pi.testItemEigenValue = value;
     }
     else
     {
-        _log.LOG_ERROR("ThreadMicrometer 【%s】 高度检测设备的值 【错误】 最大值为【%f】 最小值为【%f】 采集值1为【%f】 采集值2为【%f】"\
-           ,_di.Name.data(),_di.maxValue.at(index),_di.minValue.at(index),result.at(0),result.at(1));
+        _log.LOG_ERROR("ThreadMicrometer 【%s】 高度检测设备的值 【错误】 最大值为【%f】 最小值为【%f】 采集值1为【%f】 2为【%f】 3为【%f】 4为【%f】"\
+           ,_di.Name.data(),_di.maxValue.at(index),_di.minValue.at(index),result.at(0),result.at(1),result.at(2),result.at(3));
         pi.testItemJudgeResult = 0;
         m_db.Write_TagMValue(_di.JudgeResult , "0");
 //                                    pi.testItemEigenValue = "NG";
     }
+    _log.LOG_DEBUG("ThreadMicrometer 【%s】强制给OK信号，判定良品.",_di.Name.data());
+    m_db.Write_TagMValue(_di.IdFlag,"强制给OK信号，直接判定为【良品】");
+    m_db.Write_TagMValue(m_PointOk,"1");
 }
 
 string ThreadMicrometer::getMicrometerValue(int &oktimes,int index,vector<double>& result,vector<double> &paraVec)
@@ -434,4 +485,50 @@ string ThreadMicrometer::getMicrometerValue(int &oktimes,int index,vector<double
         value = value.substr(0, value.rfind("/"));
     }
     return value;
+}
+
+string ThreadMicrometer::D3GetPLCPointOK()                                //D3线获取PLC“扫码不良”点位
+{
+    string plcScanOk;
+    for(map<string,DeviceInfo>::iterator it = gLine.Si.Dis.begin(); it != gLine.Si.Dis.end();it++)
+    {
+        DeviceInfo di = it->second;
+        if(di.Name == "1#PLC")
+        {
+            for(map<string, UnitInfo>::iterator it = di.Units.begin();it != di.Units.end();it++)
+            {
+                map<string, Tag> tags = it->second.Tags;
+                for(map<string, Tag>::iterator im = tags.begin();im != tags.end();im++)
+                {
+                    Tag tag = im->second;
+                    if(tag.TagCode == "JGOK")
+                        plcScanOk = (tag.TagName);
+                }
+            }
+        }
+    }
+    return plcScanOk;
+}
+
+string ThreadMicrometer::D3GetPLCPointNG()                                //D3线获取PLC“扫码良”点位
+{
+    string plcScanNG;
+    for(map<string,DeviceInfo>::iterator it = gLine.Si.Dis.begin(); it != gLine.Si.Dis.end();it++)
+    {
+        DeviceInfo di = it->second;
+        if(di.Name == "1#PLC")
+        {
+            for(map<string, UnitInfo>::iterator it = di.Units.begin();it != di.Units.end();it++)
+            {
+                map<string, Tag> tags = it->second.Tags;
+                for(map<string, Tag>::iterator im = tags.begin();im != tags.end();im++)
+                {
+                    Tag tag = im->second;
+                    if(tag.TagCode == "JGNG")
+                        plcScanNG = (tag.TagName);
+                }
+            }
+        }
+    }
+    return plcScanNG;
 }
