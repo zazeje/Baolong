@@ -23,10 +23,6 @@ mainWidget::mainWidget()
     m_passwidget = new PasswordWidget(this);
     m_passwidget->setPalette(palette);
 
-    //构造用户选择窗口
-    m_passwidget = new PasswordWidget(this);
-    m_passwidget->setPalette(palette);
-
     //用户选择界面
     m_usrchosewidget = new UsrChoose(this);
     m_usrchosewidget->setPalette(palette);
@@ -72,7 +68,6 @@ mainWidget::mainWidget()
     m_stackwidget->addWidget(m_passwidget);
     m_stackwidget->addWidget(m_plcDisplay);
     m_stackwidget->addWidget(m_plcState);
-    m_stackwidget->addWidget(m_passwidget);
     m_stackwidget->addWidget(m_plcControl);
     m_stackwidget->addWidget(m_plcSetting);
     m_stackwidget->addWidget(m_plcModify);
@@ -119,10 +114,12 @@ mainWidget::~mainWidget()
 
 void mainWidget::showPlcDisplay()
 {
-    m_plcDisplay->m_timer->start(1000);
-    PlcPointBase::SetDisplayType(5);
-    PlcPointBase::SetReadPlcFlag(true);
-    m_stackwidget->setCurrentWidget(m_plcDisplay);
+    widgetFlag = 1;
+    m_passwidget->m_dialogPassword->clear();
+    if(m_stackwidget->currentWidget() ==  m_usrchosewidget)
+        m_stackwidget->setCurrentWidget(m_passwidget);
+    else
+        m_stackwidget->setCurrentWidget(m_plcDisplay);
 }
 
 void mainWidget::showPlcState()
@@ -166,14 +163,6 @@ void mainWidget::showUsrchosewidget()
 }
 
 /**
- * @brief 显示PBOX配置窗口
- */
-void mainWidget::showPBoxConfig()
-{
-    m_stackwidget->setCurrentWidget(m_config);
-}
-
-/**
  * @brief 显示数据展示窗口
  */
 void mainWidget::showDisplaywidget()
@@ -194,18 +183,11 @@ void mainWidget::showDisplaywidget()
  * @brief 用户选择进入PBOX配置界面时显示密码输入窗口
  */
 void mainWidget::slot_pboxconfigclicked()
-{
-    m_stackwidget->setCurrentWidget(m_config);
-}
-
-/**
- * @brief 用户选择进入工艺配置界面时显示密码输入窗口
- */
-void mainWidget::slot_configclicked()
-{
+{    
     widgetFlag = 2;
     m_passwidget->m_dialogPassword->clear();
     m_stackwidget->setCurrentWidget(m_passwidget);
+//    m_stackwidget->setCurrentWidget(m_config);
 }
 
 /**
@@ -214,28 +196,33 @@ void mainWidget::slot_configclicked()
 void mainWidget::PasswordWidgetConfirm()
 {
     string password = m_passwidget->m_dialogPassword->text().toStdString();
-    if(password == "111111")
+    if(password == "admin"|| password == "111111")
     {
         m_passwidget->close();
         if(widgetFlag == 1)
         {
-            showPBoxConfig();
+            m_plcDisplay->m_timer->start(1000);
+            PlcPointBase::SetDisplayType(5);
+            PlcPointBase::SetReadPlcFlag(true);
+            m_stackwidget->setCurrentWidget(m_plcDisplay);
+        }else if(widgetFlag == 2){
+            m_stackwidget->setCurrentWidget(m_config);
         }
     }
     else
     {
         m_passwidget->close();
-        showUsrchosewidget();
         QMessageBox m_message;
         QPushButton *ok = m_message.addButton(tr("  确  定  "),QMessageBox::ActionRole);
         string text = "    密    码    错    误    ";
         m_message.setText(QString::fromStdString(text));
-        m_message.move(380,250);
+        m_message.move(500,370);
         m_message.setIcon(QMessageBox::Warning);
         m_message.exec();
         if(m_message.clickedButton() == ok)
         {
             m_message.close();
+            showUsrchosewidget();
         }
     }
 }

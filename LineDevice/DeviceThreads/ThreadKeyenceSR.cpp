@@ -171,6 +171,43 @@ void ThreadKeyenceSR::threadprocess()
                        processScanD3SD(name);
                        //界面显示产品个数
                        StationInfo::ProductCount++;
+
+                       if(g_dbInfo.GetWorkCenterNo() == "3116"){
+                           string jr = m_db.Read_TagMValue(_di.Prefix + "SLR");
+                           if(jr == "1")
+                           {
+                               pi.testItemJudgeResult = 1;
+                               pi.testItemEigenValue = "OK";
+                               m_db.Write_TagMValue(_di.JudgeResult,"1");
+                               m_db.Write_TagMValue(_di.BarCode , "测漏良品");
+                               _log.LOG_DEBUG("ThreadKeyenceSR 【%s】设备 【测漏良品】",_di.Name.data());
+                               printf("【%s】 %s 测漏良品 \n",_di.Name.data(),_di.DeviceCode.data());
+                           }
+                           else
+                           {
+                               pi.testItemJudgeResult = 0;
+                               pi.testItemEigenValue = "NG";
+                               m_db.Write_TagMValue(_di.JudgeResult,"0");
+                               _log.LOG_DEBUG("ThreadKeyenceSR 【%s】设备 【测漏不良】",_di.Name.data());
+                               m_db.Write_TagMValue(_di.BarCode, "测漏不良");
+                           }
+                           //设备判定使能为0时，直接将判定结果置为1
+                           if(!_di.judgeEneble.empty() && _di.judgeEneble.at(0) == 0)
+                           {
+                               _log.LOG_ERROR("ThreadKeyenceSR 【%s】 判定使能为 0 ",_di.Name.data());
+                               m_db.Write_TagMValue(_di.JudgeResult,"1");
+                               pi.testItemJudgeResult = 1;
+                               pi.testItemEigenValue = "NA";
+                           }
+                           pi.partNoId = m_barCode;
+                           pi.partSeqNo = m_db.Read_TagMValue(_di.SnFlag);
+                           pi.operationNo = _di.currentOperationNo;
+                           pi.machCode = _di.DeviceCode;
+                           if(_di.testItemCode.size() > 0)
+                               pi.testItemCode = _di.testItemCode.at(0);
+                           if(!pi.partSeqNo.empty())
+                                SaveProductInfo(pi);
+                       }
                    }
                }
                //外壳打标工位（2#扫码器--扫ID不给114置1）
@@ -448,8 +485,8 @@ string ThreadKeyenceSR::D3GetBarCode(string barcode, KeyencePara type)
 //        //tcpServer
 //        string sId = _num + "$" + "ID";
 //        m_db.Write_TagMValue(sId, barcode);
-//        string sSeqNo = _num + "$" + "SQ";
-//        m_db.Write_TagMValue(sSeqNo, value);
+//        string sSeqNo = _num + "$" + "SQ";f
+//        m_db.Write_TagMValue(sSeqNo, value);f
     }
 
 //    string sPos = _num + "$" + "PS";

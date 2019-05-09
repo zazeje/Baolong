@@ -14,7 +14,7 @@ PlcPointBase::PlcPointBase()
 {
     if(m_device == NULL)
     {
-#ifdef _D2Line
+/*#ifdef _D2Line
         if(g_dbInfo.GetWorkCenterNo() == "3106")
         {
             //电池组装工位使用的是5UPLC，触摸屏端口为232协议,触摸屏使用串口站号为1
@@ -26,10 +26,17 @@ PlcPointBase::PlcPointBase()
             SerialPortParameters* spp = new SerialPortParameters("COM2",9600,7,1,2);
             m_device = new FxPlc(spp,"控制触摸屏Plc",programProtocol,false);
         }
-#else
-        SerialPortParameters* spp = new SerialPortParameters("COM4",9600,7,1,1);
-        m_device = new FxPlc(spp,"PLC触摸屏",dedicatedProtocol,false);
-#endif
+#else*/
+        if(g_dbInfo.GetWorkCenterNo() == "3118" || g_dbInfo.GetWorkCenterNo() == "3109"
+                || g_dbInfo.GetWorkCenterNo() == "3108" || g_dbInfo.GetWorkCenterNo() == "3113"
+                || g_dbInfo.GetWorkCenterNo() == "3117" || g_dbInfo.GetWorkCenterNo() == "3107"
+                || g_dbInfo.GetWorkCenterNo() == "3114" || g_dbInfo.GetWorkCenterNo() == "3116"){
+            SerialPortParameters* spp = new SerialPortParameters("COM2",9600,7,1,2);
+            m_device = new FxPlc(spp,"控制触摸屏Plc",programProtocol,false);
+        }else{
+            SerialPortParameters* spp = new SerialPortParameters("COM4",9600,7,1,1);
+            m_device = new FxPlc(spp,"PLC触摸屏",dedicatedProtocol,false);
+        }
 
         pthread_t th;
         pthread_create(&th,NULL,CreateThread,this);

@@ -394,7 +394,7 @@ void ThreadMicrocaliper::getResult()
     _log.LOG_DEBUG("ThreadMicrocaliper 【%s】 result2 = 【%.3f】",_di.Name.data(),m_result2);
     m_db.Write_TagMValue(_di.iValue, "高度检测结果 result2 = 【" + DoubleToString(m_result2,"%.3f") + "】");
 
-    sleep(78);
+    sleep(60);
 
     m_result3 = getLeakageResult();
     _log.LOG_DEBUG("ThreadMicrocaliper 【%s】 result3 = 【%.3f】",_di.Name.data(),m_result3);
@@ -402,7 +402,9 @@ void ThreadMicrocaliper::getResult()
 
     m_collectValue = DoubleToString(m_result1,"%.3f").append("/").append(DoubleToString(m_result2,"%.3f")).append("/").append(DoubleToString(m_result3,"%.3f"));
     _log.LOG_DEBUG("ThreadMicrocaliper 【%s】 高度检测结果 result = 【%s】",_di.Name.data(),m_collectValue.data());
-    m_db.Write_TagMValue(_di.iValue, "全部高度检测结果 result = 【" + m_collectValue + "】");
+    m_db.Write_TagMValue(_di.iValue, "高度测试值【" + m_collectValue +
+                         "】差值【"+ DoubleToString(m_result2 - m_result1,"%.3f").append("/")
+                         + DoubleToString(m_result2 - m_result3 > 0 ? (m_result2 - m_result3):(m_result3 - m_result2),"%.3f") +"】(mm)");
 }
 
 

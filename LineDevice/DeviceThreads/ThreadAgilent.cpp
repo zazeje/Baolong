@@ -51,7 +51,7 @@ void ThreadAgilent::threadprocess()
         return;
     }
 #else
-    if((!workCenterNo.compare("3218")) || (!workCenterNo.compare("3309") || (!workCenterNo.compare("20035"))))
+    if((!workCenterNo.compare("3218")) || (!workCenterNo.compare("3309") || (!workCenterNo.compare("20035")) || (!workCenterNo.compare("3109"))))
     {
         pthread_t _collectThread;
         //创建采集线程
@@ -98,7 +98,7 @@ void ThreadAgilent::threadprocess()
                         clearData(kvpt.TagName);
                         _log.LOG_DEBUG("ThreadAgilent 【%s】 检测到电压或电流开始采集信号!",_di.Name.data());
 #ifndef _TruckLine
-                        if((!workCenterNo.compare("3218")) || (!workCenterNo.compare("3309") || (!workCenterNo.compare("20035"))))
+                        if((!workCenterNo.compare("3218")) || (!workCenterNo.compare("3309") || (!workCenterNo.compare("20035")) || (!workCenterNo.compare("3109"))))
                         {
                             _stopColl = false;
                         }
@@ -145,7 +145,7 @@ void ThreadAgilent::threadprocess()
 #else
                 else if (!code.compare("EC"))
                 {
-                    if((!workCenterNo.compare("3218")) || (!workCenterNo.compare("3309") || (!workCenterNo.compare("20035"))) )
+                    if((!workCenterNo.compare("3218")) || (!workCenterNo.compare("3309") || (!workCenterNo.compare("20035")) || (!workCenterNo.compare("3109"))) )
                     {
                         if(!kvpt.MemortValue.compare("1"))
                         {
@@ -227,7 +227,7 @@ bool ThreadAgilent::InitAgilentDevice()
     string currentenablepara;
     string outputformatpara;
     string para;
-    if(_di.type == "1")
+    if(/*_di.type == "1"*/1)
     {
 #ifdef _TruckLine
         //初始化皮安计电流参数
@@ -272,7 +272,8 @@ bool ThreadAgilent::InitAgilentDevice()
 
         myTcpDevice->InitPara(para,"");
 #else
-        if((!workCenterNo.compare("3218")) || (!workCenterNo.compare("3309")) || (!workCenterNo.compare("20035")))
+        if((!workCenterNo.compare("3218")) || (!workCenterNo.compare("3309")) || (!workCenterNo.compare("20035"))
+                || (!workCenterNo.compare("3109")))
         {
             para = getMachinePara();
             _log.LOG_DEBUG("ThreadAgilent 【%s】 皮安计电流使能参数 para=【%s】",_di.Name.data(),para.data());
@@ -307,7 +308,12 @@ bool ThreadAgilent::InitAgilentDevice()
             }
             //初始化电流参数
 
-            myTcpDevice->InitPara(para,"");
+            if(_di.type == "1")
+                myTcpDevice->InitPara(para,"");
+            else if(_di.type == "2"){
+                _log.LOG_DEBUG("ThreadAgilent 【%s】para【%s】 ",_di.Name.data(),para.data());
+                myComDevice->SendCommand(para);
+            }
         }
         else
         {
@@ -327,12 +333,12 @@ bool ThreadAgilent::InitAgilentDevice()
 
             //初始化电流使能参数和输出参数
             myTcpDevice->InitPara(currentenablepara, outputformatpara);
+            if(!myTcpDevice->InitDevice())
+                return false;
+            else
+                return true;
         }
 #endif
-        if(!myTcpDevice->InitDevice())
-            return false;
-        else
-            return true;
     }
 //    else if(_di.type == "2")
 //    {
@@ -819,7 +825,7 @@ void ThreadAgilent::sendValueToTcpServer(string cValue)
     string sCollectValue = _num + "$" + "CV" + IntToString(pos);
     m_db.Write_TagMValue(sCollectValue, cValue);
 #else
-    if((!workCenterNo.compare("3218")) || (!workCenterNo.compare("3309")) || (!workCenterNo.compare("20035")))
+    if((!workCenterNo.compare("3218")) || (!workCenterNo.compare("3309")) || (!workCenterNo.compare("20035")) || (!workCenterNo.compare("3109")))
     {
         int pos=0;
         pos = atoi(_di.testStartPos.data());
