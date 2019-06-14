@@ -75,6 +75,21 @@ void ThreadFxPlc::ProcessUnit(UnitInfo ui)
 //                    _log.LOG_ERROR("ThreadFxPLC 【%s】 PLC通信正常 ... ",_di.Name.data());
                 }
             }
+
+            //PLC报警，PlcValue值为"1"时，PLC点胶干胶报警
+            if(tag.Address == 118)
+            {
+                if(tag.PlcValue == "1")
+                {
+                    //上位机上传中，"0"代表报警，"1"代表正常
+//                    _log.LOG_ERROR("ThreadFxPLC 【%s】 PLC【M115】报警 ... ",_di.Name.data());
+                    m_db.Write_TagMValue(_num + "$" + "NT", _di.Name + " 【M118】PLC点胶干胶报警");
+                }
+                else if(tag.PlcValue == "0")
+                {
+//                    _log.LOG_ERROR("ThreadFxPLC 【%s】 PLC通信正常 ... ",_di.Name.data());
+                }
+            }
         }
         //处理逻辑控制模式为设备控制内存数据库的点位
         else if(!tag.LogicalMode.compare("DCM"))
@@ -191,6 +206,15 @@ void ThreadFxPlc::ProcessUnit(UnitInfo ui)
 //                    _log.LOG_DEBUG("ThreadFxPlc 【%s】 通信检测【正常】",_di.Name.data());
                 }
             }
+        }
+
+        //添加D2线功率测试站，样件模式给信号到PLC
+        if(g_dbInfo.GetWorkCenterNo() == "3117")
+        {
+            if(EnableSampleMode == 1)
+                m_db.Write_TagMValue("3117$E0000050$YJ","1");
+            else
+                m_db.Write_TagMValue("3117$E0000050$YJ","0");
         }
     }
 }

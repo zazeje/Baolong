@@ -114,10 +114,12 @@ mainWidget::~mainWidget()
 
 void mainWidget::showPlcDisplay()
 {
-    m_plcDisplay->m_timer->start(1000);
-    PlcPointBase::SetDisplayType(5);
-    PlcPointBase::SetReadPlcFlag(true);
-    m_stackwidget->setCurrentWidget(m_plcDisplay);
+    widgetFlag = 1;
+    m_passwidget->m_dialogPassword->clear();
+    if(m_stackwidget->currentWidget() ==  m_usrchosewidget)
+        m_stackwidget->setCurrentWidget(m_passwidget);
+    else
+        m_stackwidget->setCurrentWidget(m_plcDisplay);
 }
 
 void mainWidget::showPlcState()
@@ -161,14 +163,6 @@ void mainWidget::showUsrchosewidget()
 }
 
 /**
- * @brief 显示PBOX配置窗口
- */
-void mainWidget::showPBoxConfig()
-{
-   m_stackwidget->setCurrentWidget(m_config);
-}
-
-/**
  * @brief 显示数据展示窗口
  */
 void mainWidget::showDisplaywidget()
@@ -189,21 +183,11 @@ void mainWidget::showDisplaywidget()
  * @brief 用户选择进入PBOX配置界面时显示密码输入窗口
  */
 void mainWidget::slot_pboxconfigclicked()
-{
+{    
     widgetFlag = 2;
     m_passwidget->m_dialogPassword->clear();
     m_stackwidget->setCurrentWidget(m_passwidget);
-    //m_stackwidget->setCurrentWidget(m_config);
-}
-
-/**
- * @brief 用户选择进入工艺配置界面时显示密码输入窗口
- */
-void mainWidget::slot_PLCconfigclicked()
-{
-    widgetFlag = 1;
-    m_passwidget->m_dialogPassword->clear();
-    m_stackwidget->setCurrentWidget(m_passwidget);
+//    m_stackwidget->setCurrentWidget(m_config);
 }
 
 /**
@@ -212,34 +196,33 @@ void mainWidget::slot_PLCconfigclicked()
 void mainWidget::PasswordWidgetConfirm()
 {
     string password = m_passwidget->m_dialogPassword->text().toStdString();
-    cout<<"g_dbInfo.m_LinePassword ="<<g_dbInfo.m_LinePassword<<endl;
-    if( (!password.compare(g_dbInfo.m_LinePassword)) || (!password.compare("admin")) )
-    {        
+    if(password == "admin"|| password == "111111")
+    {
+        m_passwidget->close();
         if(widgetFlag == 1)
         {
-            m_passwidget->close();
-            showPlcDisplay();
-        }
-        else if(widgetFlag == 2)
-        {
-            m_passwidget->close();
-            showPBoxConfig();
+            m_plcDisplay->m_timer->start(1000);
+            PlcPointBase::SetDisplayType(5);
+            PlcPointBase::SetReadPlcFlag(true);
+            m_stackwidget->setCurrentWidget(m_plcDisplay);
+        }else if(widgetFlag == 2){
+            m_stackwidget->setCurrentWidget(m_config);
         }
     }
     else
     {
-        //m_passwidget->close();
-        //showUsrchosewidget();
+        m_passwidget->close();
         QMessageBox m_message;
         QPushButton *ok = m_message.addButton(tr("  确  定  "),QMessageBox::ActionRole);
         string text = "    密    码    错    误    ";
         m_message.setText(QString::fromStdString(text));
-        m_message.move(380,250);
+        m_message.move(500,370);
         m_message.setIcon(QMessageBox::Warning);
         m_message.exec();
         if(m_message.clickedButton() == ok)
         {
             m_message.close();
+            showUsrchosewidget();
         }
     }
 }

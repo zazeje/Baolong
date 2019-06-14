@@ -333,12 +333,12 @@ bool ThreadAgilent::InitAgilentDevice()
 
             //初始化电流使能参数和输出参数
             myTcpDevice->InitPara(currentenablepara, outputformatpara);
-            if(!myTcpDevice->InitDevice())
-                return false;
-            else
-                return true;
         }
 #endif
+        if(!myTcpDevice->InitDevice())
+            return false;
+        else
+            return true;
     }
 //    else if(_di.type == "2")
 //    {

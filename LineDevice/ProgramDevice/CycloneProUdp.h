@@ -41,6 +41,7 @@ public:
     bool AddSapFileByName(string filePath);
     // 重启烧程器，返回帧只有一帧
     bool Reset();
+    string m_NameSAP;
 
     string SendAndCheck(string command, string result, long timeout);
     string WriteProgramAndGetId();

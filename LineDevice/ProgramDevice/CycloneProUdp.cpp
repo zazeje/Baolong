@@ -467,6 +467,13 @@ bool CycloneProUdp::DeleteAllSap()
 bool CycloneProUdp::AddSapFileByName(string filePath)
 {
     _log.LOG_DEBUG("CycloneProUdp 【%s】设备,开始添加SAP文件，文件路径为【%s】",Name.data(),filePath.data());
+
+    m_NameSAP = "";
+    QStringList str = QString(filePath.data()).split("/");
+    if (str.size() > 0)
+    m_NameSAP = str[str.size() -1].toStdString();
+    mycout(m_NameSAP);
+
     FILE* fs = fopen(filePath.data(), "rb");
     if(fs == NULL)
     {

@@ -394,7 +394,8 @@ void ThreadTpmsHandle::ParseScannerID(string _id,string partSeqNo)
         sendID(_id);
         m_mode = Power;
         _stopColl = false;
-        sleep(7);
+        _log.LOG_DEBUG("ThreadTpmsHandle 【%s】设备 功率唤醒发送ID【%s】sleep(6)",_di.Name.data(),_id.data());
+        sleep(6);
         _stopColl = true;
         judgeTpmsCheck(pi.testItemJudgeResult);
         noJudge();

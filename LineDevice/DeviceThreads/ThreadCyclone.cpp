@@ -389,6 +389,7 @@ string ThreadCyclone::startToCyclone(string address)
 {
     //从数据库申请烧程ID
     string programId = AssignProgramId();
+    pi.testItemCollectValue = myDevice->m_NameSAP;  //保存烧程文件名,做版本追溯
     if(programId.empty())
     {
         _log.LOG_ERROR("ThreadCyclone 【%s】 数据库取ID【失败】",_di.Name.data());

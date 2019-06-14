@@ -27,6 +27,9 @@
 #include <QStringList>
 #include <sstream>
 
+#define VNAME(name) (#name)
+#define mycout(name)(   cout << VNAME(name)<< " = " << name  << endl )
+
 using namespace std;
 
 //16进制字符串转16进制字符数组

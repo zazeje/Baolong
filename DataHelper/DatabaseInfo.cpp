@@ -32,6 +32,7 @@ bool DatabaseInfo::Init()
         getline(file, m_password);
         getline(file, m_databaseName);
         getline(file, m_LineName);
+        getline(file, m_LinePassword);
         _log.LOG_DEBUG("DatabaseInfo【config.txt】 workCenterNo=【%s】 hostIP=【%s】 userName=【%s】 password=【%s】 databaseName=【%s】",\
                        m_workCenterNo.data(),m_hostIP.data(),m_userName.data(),m_password.data(),m_databaseName.data());
 

@@ -28,6 +28,7 @@ public:
     bool SetWorkCenterNo(string WorkCenterNo);
 
     string m_LineName;  //线路名称
+    string m_LinePassword;  //线路密码
 
 private:
 

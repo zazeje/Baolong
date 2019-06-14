@@ -75,11 +75,11 @@ bool DeviceDriver::Start()
         int code = atoi(im->second.machDriverNo.data());
         bool deviceEnable = im->second.Enable;
         //如果设备不使能则直接跳过启动设备线程
-//        if(!deviceEnable)
-//        {
-//            _log.LOG_INFO("DeviceDriver 【%s】 设备未使能 ",im->second.Name.data());
-//            continue;
-//        }
+        if(!deviceEnable)
+        {
+            _log.LOG_INFO("DeviceDriver 【%s】 设备未使能 ",im->second.Name.data());
+            continue;
+        }
         switch(code)
         {
         case KeyenceSr:     //keyencesr TCP

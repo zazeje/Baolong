@@ -55,6 +55,7 @@ public:
 
     int widgetFlag;//使用密码时，记录选择的界面.0为未知，1为PLC设置界面，2为PBOX设置界面
 
+
 signals:
 
     void checkControlType(const QString &);
@@ -67,10 +68,8 @@ public slots:
     void showDisplaywidget();
 //    void showTestWidget();
     void slot_pboxconfigclicked();
-    void slot_PLCconfigclicked();
     void PasswordWidgetConfirm();
     void PasswordWidgetCancel();
-    void showPBoxConfig();
     void showPlcControl();
     void showPlcSetting();
     void showPlcModifyItem();

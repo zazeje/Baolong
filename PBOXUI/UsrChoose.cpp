@@ -105,5 +105,6 @@ void UsrChoose::dataDisplay()
 void UsrChoose::plcDisplay()
 {
     this->close();
-    m_parent->showPlcDisplay();
+//    m_parent->showPlcDisplay();
+    m_parent->slot_PLCconfigclicked();
 }

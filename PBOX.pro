@@ -10,6 +10,8 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = PBOX
 TEMPLATE = app
+target.path = /home/root/App
+INSTALLS += target
 QMAKE_CXXFLAGS += -std=c++11
 
 INCLUDEPATH += /opt/fsl-imx-fb/3.14.52-1.1.1/sysroots/cortexa9hf-vfp-neon-poky-linux-gnueabi/usr/include/mysql

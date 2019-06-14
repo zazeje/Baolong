@@ -157,6 +157,15 @@ void ThreadSpectrumAnalyzer::threadprocess()
                         _counter = 1;
                     }
                 }
+                if(  (!m_tag.CTagNames.empty()) && (m_tag.MemortValue == "1")  ) //关联控制点,写给手柄测试结束
+                {
+                    for(list<string>::iterator it = m_tag.CTagNames.begin();it != m_tag.CTagNames.end();it++)
+                    {
+                        string key = *it;
+                        m_db.Write_TagMValue(key,"1");
+                        _log.LOG_DEBUG("ThreadSpectrumAnalyzer 【%s】设备，写关联控制点【%s】",_di.Name.data(),key.data());
+                    }
+                }
             }
          }
         _counter++;
